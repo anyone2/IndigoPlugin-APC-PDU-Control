@@ -1,17 +1,7 @@
 <?xml version="1.0"?>
 <PluginConfig>
-	<Field id="infoLabel" type="label">
-		<Label>APC Power Distribution Unit (PDU) Plugin         Developed by Anyone</Label>
-	</Field>	
-
-	<Field id="simpleSeparator1" type="separator"/>
 	<Field id="showDebugInfo" type="checkbox">
 		<Label>Enable debugging:</Label>
 		<Description>(not recommended)</Description>
 	</Field>
-    <Field id="simpleSeparator2" type="separator"/>
-    <Field id="processTraps" type="checkbox" defaultValue="Checked">
-        <Label>Process SNMP Traps:</Label>
-        <Description>(advance configuration is required)</Description>
-    </Field>
 </PluginConfig>
