@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<!-- If your plugin defines device types, you can define them here.
+
+     Devices must specify their type (via the type attribute):
+
+        relay (ON/OFF/STATUS)
+        dimmer (ON/OFF/DIM/BRIGHTEN/SET BRIGHTNESS/STATUS)
+        speedcontrol (ON/OFF/SET SPEED LEVEL/SET SPEED INDEX/INCREASE/DECREASE/STATUS)
+        sensor (ON/OFF/STATUS)
+        thermostat
+        sprinkler
+        custom
+
+     The first six inherit states, actions and events from Indigo. You can
+     also specify your own custom actions and additional states, if needed.
+
+     The two Device examples below specify the relay and dimmer types.
+     
+     Devices must also specify a unique type_id - so, for instance, if you define
+     2 relay type devices then your plugin can distinguish between the two by
+     the type_id.
+-->
+
+<Devices>
+    <!-- This device illustrates how a plugin can inherit Indigo's relay
+    device behavior including on/off states, relay actions (on/off/toggle),
+    and will support Indigo and Indigo Touch's native UI for relay type
+    devices.
+    -->
+
+    <Device type="relay" id="apcpdu">
+        <Name>MasterSwitch Unit</Name>
+        <ConfigUI>
+            <SupportURL>http://forums.indigodomo.com/viewforum.php?f=102</SupportURL>
+            <Field id="autoLabel" type="label" >
+                <Label>Enter the configuration details of your APC MasterSwitch PDU:</Label>
+            </Field>
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+                <Label>IP Address:</Label>
+            </Field>
+            <Field id="community" type="textfield" defaultValue="private">
+                <Label>Community Name:</Label>
+            </Field>
+            <Field id="outlet" type="textfield" defaultValue="1">
+                <Label>PDU Outlet:</Label>
+            </Field>
+
+            <Field id="swapRebootForOff" type="checkbox">
+                <Label>Use OFF as Reboot:</Label>
+            </Field>
+
+            <Field type="menu" id="sPDUOutletPowerOnTime" defaultValue="Not configured">
+                <Label>Power on delay:</Label>
+                <List>
+                    <Option value="Not configured">Use the settings on the PDU</Option>                    
+                    <Option value="-1">Never start providing</Option>
+                    <Option value="0">0-seconds</Option>
+                    <Option value="15">15-seconds</Option>
+                    <Option value="30">30-seconds</Option>
+                    <Option value="45">45-seconds</Option>
+                    <Option value="60">60-seconds</Option>
+                    <Option value="120">120-seconds</Option>
+                    <Option value="300">300-seconds</Option>
+                </List>
+            </Field>
+
+            <Field type="menu" id="sPDUOutletPowerOffTime" defaultValue="Not configured">
+                <Label>Power off delay:</Label>
+                <List>
+                    <Option value="Not configured">Use the settings on the PDU</Option>                    
+                    <Option value="-1">Never stop providing</Option>
+                    <Option value="0">0-seconds</Option>
+                    <Option value="15">15-seconds</Option>
+                    <Option value="30">30-seconds</Option>
+                    <Option value="45">45-seconds</Option>
+                    <Option value="60">60-seconds</Option>
+                    <Option value="120">120-seconds</Option>
+                    <Option value="300">300-seconds</Option>
+                </List>
+            </Field>
+
+            <Field type="menu" id="sPDUOutletRebootDuration" defaultValue="Not configured">
+                <Label>Reboot Off/On Delay:</Label>
+                <List>
+                    <Option value="Not configured">Use the settings on the PDU</Option>                    
+                    <Option value="5">5-seconds</Option>
+                    <Option value="10">10-secons</Option>
+                    <Option value="15">15-seconds</Option>
+                    <Option value="20">20-seconds</Option>
+                    <Option value="30">30-seconds</Option>
+                    <Option value="45">45-seconds</Option>
+                    <Option value="60">60-seconds</Option>
+                </List>
+            </Field>
+
+        </ConfigUI>
+        <States>
+            <!-- By default relay type devices automatically inherit the
+            state: onOffState.
+    
+            The plugin can specify additional custom states and custom
+            actions (in Actions.xml) to modify custom states. As an example
+            here, we define a new custom state, backlightBrightness, which
+            is used to control the brightness of the backlit display of
+            the module.
+            -->
+            <State id="swapRebootForOff">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>Use OFF as Reboot</TriggerLabel>
+                <ControlPageLabel>Use OFF as Reboot</ControlPageLabel>
+            </State>
+            <State id="sPDUOutletPowerOnTime">
+                <ValueType>Integer</ValueType>
+                <TriggerLabel>Power On Time</TriggerLabel>
+                <ControlPageLabel>Power On Time</ControlPageLabel>
+            </State>
+            <State id="sPDUOutletPowerOffTime">
+                <ValueType>Integer</ValueType>
+                <TriggerLabel>Power Off Time</TriggerLabel>
+                <ControlPageLabel>Power Off Time</ControlPageLabel>
+            </State>
+            <State id="sPDUOutletRebootDuration">
+                <ValueType>Integer</ValueType>
+                <TriggerLabel>Reboot OffOn Delay</TriggerLabel>
+                <ControlPageLabel>Reboot OffOn Delay</ControlPageLabel>
+            </State>
+
+        </States>
+    </Device>
+</Devices>
+
+

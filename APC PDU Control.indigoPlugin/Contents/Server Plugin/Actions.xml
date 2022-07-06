@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- By default relay/dimmer type devices will inherit all
+     class DeviceAction actions, which will be dispatched to
+     the actionControlDevice() method defined in plugin.py.
+     
+     Additional custom actions can also be defined here. The
+     example below defines a custom action to modify the brightness
+     of the backlit display of the module, and to modify the custom
+     backlightBrightness state added to Devices.xml.
+-->
+
+<Actions>
+    <Action id="OnImmediately" deviceFilter="self" uiPath="DeviceActions">
+        <Name>Turn ON outlet immediately</Name>
+        <CallbackMethod>outletOnImmediately</CallbackMethod>
+    </Action>
+    <Action id="OffImmediately" deviceFilter="self" uiPath="DeviceActions">
+        <Name>Turn OFF outlet immediately</Name>
+        <CallbackMethod>outletOffImmediately</CallbackMethod>
+    </Action>
+    <Action id="Reboot" deviceFilter="self" uiPath="DeviceActions">
+        <Name>Reboot outlet immediately</Name>
+        <CallbackMethod>outletReboot</CallbackMethod>
+    </Action>
+    <Action id="OnDelay" deviceFilter="self" uiPath="DeviceActions">
+        <Name>Turn ON outlet after configured delay</Name>
+        <CallbackMethod>outletOnWithDelay</CallbackMethod>
+    </Action>
+    <Action id="OffDelay" deviceFilter="self" uiPath="DeviceActions">
+        <Name>Turn OFF outlet after configured delay</Name>
+        <CallbackMethod>outletOffWithDelay</CallbackMethod>
+    </Action>
+    <Action id="RebootDelay" deviceFilter="self" uiPath="DeviceActions">
+        <Name>Reboot outlet after configured delay</Name>
+        <CallbackMethod>outletRebootWithDelay</CallbackMethod>
+    </Action>
+</Actions>
