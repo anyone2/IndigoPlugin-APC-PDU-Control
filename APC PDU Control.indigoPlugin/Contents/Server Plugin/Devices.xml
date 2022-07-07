@@ -44,11 +44,11 @@
             <Field id="outlet" type="textfield" defaultValue="1">
                 <Label>PDU Outlet (1-16):</Label>
             </Field>
-            <Field id="address" type="textfield" defaultValue="Outlet 1">
+            <Field id="address" type="textfield" defaultValue="unassigned">
                 <Label>Outlet Address:</Label>
             </Field>
 
-            <Field id="swapRebootForOff" type="checkbox">
+            <Field id="UseOffAsReboot" type="checkbox">
                 <Label>Use OFF as Reboot:</Label>
             </Field>
 
@@ -107,7 +107,7 @@
             is used to control the brightness of the backlit display of
             the module.
             -->
-            <State id="swapRebootForOff">
+            <State id="UseOffAsReboot">
                 <ValueType>Boolean</ValueType>
                 <TriggerLabel>Use OFF as Reboot</TriggerLabel>
                 <ControlPageLabel>Use OFF as Reboot</ControlPageLabel>

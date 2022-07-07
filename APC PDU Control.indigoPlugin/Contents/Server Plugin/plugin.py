@@ -81,13 +81,6 @@ class Plugin(indigo.PluginBase):
                 return False, valuesDict, errorDict
 
 
-
-
-
-
-
-            
-
     ###################################################
 
     def shellCommand(self, the_command, shellValue):
@@ -112,18 +105,26 @@ class Plugin(indigo.PluginBase):
 
         # TURN OFF ######
         elif action.deviceAction == indigo.kDimmerRelayAction.TurnOff:
-            self.setPDUState(dev, "off")
+            if dev.pluginProps["UseOffAsReboot"]:
+                self.setPDUState(dev, "outletReboot")
+            else:
+                self.setPDUState(dev, "off")
 
         # TOGGLE ######
         elif action.deviceAction == indigo.kDimmerRelayAction.Toggle:
+            
+            # If device is currently on, turn it off
             if dev.onState:
-                # Device is currently on, so turn it off
-                self.setPDUState(dev, "off")
+                # if 'Use Off as Reboot' checked in Configuration
+                if dev.pluginProps["UseOffAsReboot"]:
+                    # reboot the outlet
+                    self.setPDUState(dev, "outletReboot")
+                else:
+                    # turn the device off
+                    self.setPDUState(dev, "off")
             else:
                 # Device is currently off, so turn it on
                 self.setPDUState(dev, "on")
-
-
 
         # STATUS REQUEST ######
         elif action.deviceAction == indigo.kDeviceGeneralAction.RequestStatus:
@@ -138,9 +139,9 @@ class Plugin(indigo.PluginBase):
         community = dev.pluginProps["community"]
 
         # cycle thru delays settings
-        for d in ["sPDUOutletPowerOnTime", 
-                  "sPDUOutletPowerOffTime", 
-                  "sPDUOutletRebootDuration"]:
+        for d in ["OutletPowerOnTime", 
+                  "OutletPowerOffTime", 
+                  "OutletRebootDuration"]:
 
             # if using the settings on the PDU
             if dev.pluginProps[d] == "Not configured":
@@ -155,7 +156,7 @@ class Plugin(indigo.PluginBase):
                 the_path = "'{0}/{1}'".format(os.getcwd(), self.the_mib_file)
 
                 # put together the snmpwalk command to determine device status
-                template = "snmpset -t 2 -m {0} -v 1 -c {1} {2} {3}.{4} i {5}"
+                template = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDU{3}.{4} i {5}"
                 the_command = template.format(the_path, 
                                               community,
                                               pduIpAddr, 
@@ -164,7 +165,7 @@ class Plugin(indigo.PluginBase):
                                               dev.pluginProps[d])
 
                 '''
-                snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 OutletPowerOnTime.5 i 15
+                snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletPowerOnTime.5 i 15
                 
                 The full path the the MIB file is required
                 '''
@@ -233,13 +234,13 @@ class Plugin(indigo.PluginBase):
         outlet = dev.pluginProps["outlet"]
         pduIpAddr = dev.pluginProps["ipAddr"]
         community = dev.pluginProps["community"]
-        swapRebootForOff = dev.pluginProps["swapRebootForOff"]
+        UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
         PowerOnTime = dev.pluginProps["OutletPowerOnTime"]
         PowerOffTime = dev.pluginProps["OutletPowerOffTime"]
         RebootDuration = dev.pluginProps["OutletRebootDuration"]
 
         # if user configured device's Off to be Reboot
-        if swapRebootForOff and state == "off":
+        if UseOffAsReboot and state == "off":
             state = "outletReboot"
 
         # send command to PDU to change state of an outlet
@@ -435,22 +436,19 @@ class Plugin(indigo.PluginBase):
 
             self.setPDUDelays(dev)
 
-            swapRebootForOff = dev.pluginProps["swapRebootForOff"]
-            self.debugLog("swapRebootForOff: {0}".format(swapRebootForOff))
-            dev.updateStateOnServer("swapRebootForOff", swapRebootForOff)
 
-            swapRebootForOff = dev.pluginProps["swapRebootForOff"]
+            UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
             OutletPowerOnTime = dev.pluginProps["OutletPowerOnTime"]
             OutletPowerOffTime = dev.pluginProps["OutletPowerOffTime"]
             OutletRebootDuration = dev.pluginProps["OutletRebootDuration"]
 
-            self.debugLog("swapRebootForOff: {0}".format(swapRebootForOff))
+            self.debugLog("UseOffAsReboot: {0}".format(UseOffAsReboot))
             self.debugLog("PowerOnTime: {0}".format(OutletPowerOnTime))
             self.debugLog("PowerOffTime: {0}".format(OutletPowerOffTime))
             self.debugLog("RebootDuration: {0}".format(OutletRebootDuration))
 
 
-            dev.updateStateOnServer("swapRebootForOff", swapRebootForOff)
+            dev.updateStateOnServer("UseOffAsReboot", UseOffAsReboot)
             dev.updateStateOnServer("OutletPowerOnTime", OutletPowerOnTime)
             dev.updateStateOnServer("OutletPowerOffTime", OutletPowerOffTime)
             dev.updateStateOnServer("OutletRebootDuration", OutletRebootDuration)
