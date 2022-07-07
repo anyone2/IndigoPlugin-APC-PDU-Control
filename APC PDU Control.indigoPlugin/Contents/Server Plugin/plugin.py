@@ -62,8 +62,31 @@ class Plugin(indigo.PluginBase):
             errorDict["outlet"] = ("The value of this field must "
                                    "be between 1 & 16")
             return False, valuesDict, errorDict
+
         else:
-            return True
+
+            addr = valuesDict["ipAddr"]
+
+            try:
+                socket.inet_aton(addr)
+                # legal IP address
+                return True
+
+            except socket.error:
+                # Not legal IP address
+                self.errorLog(f'Error: IP Address "{addr}" is invalid')
+                errorDict = indigo.Dict()
+                errorDict["ipAddr"] = ("The value of this field must "
+                                       "be a valid IP address")
+                return False, valuesDict, errorDict
+
+
+
+
+
+
+
+            
 
     ###################################################
 
@@ -133,8 +156,12 @@ class Plugin(indigo.PluginBase):
 
                 # put together the snmpwalk command to determine device status
                 template = "snmpset -t 2 -m {0} -v 1 -c {1} {2} {3}.{4} i {5}"
-                the_command = template.format(the_path, community,
-                                              pduIpAddr, d, outlet, dev.pluginProps[d])
+                the_command = template.format(the_path, 
+                                              community,
+                                              pduIpAddr, 
+                                              d, 
+                                              outlet, 
+                                              dev.pluginProps[d])
 
                 '''
                 snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 OutletPowerOnTime.5 i 15
@@ -171,7 +198,9 @@ class Plugin(indigo.PluginBase):
 
                 else:
 
-                    indigo.server.log(f'send failed "{dev.name}" unable to set delay for {d}', isError=True)
+                    indigo.server.log(f'send failed "{dev.name}" '
+                                       'unable to set delay for {d}', 
+                                       isError=True)
 
         else:  # at end of for loop
 
@@ -179,9 +208,9 @@ class Plugin(indigo.PluginBase):
             OutletPowerOffTime = dev.pluginProps["OutletPowerOffTime"]
             OutletRebootDuration = dev.pluginProps["OutletRebootDuration"]
 
-            self.debugLog("OutletPowerOnTime: {0}".format(OutletPowerOnTime))
-            self.debugLog("OutletPowerOffTime: {0}".format(OutletPowerOffTime))
-            self.debugLog("OutletRebootDuration: {0}".format(OutletRebootDuration))
+            self.debugLog("PowerOnTime: {0}".format(OutletPowerOnTime))
+            self.debugLog("PowerOffTime: {0}".format(OutletPowerOffTime))
+            self.debugLog("RebootDuration: {0}".format(OutletRebootDuration))
 
 
             dev.updateStateOnServer("OutletPowerOnTime", OutletPowerOnTime)
@@ -276,35 +305,44 @@ class Plugin(indigo.PluginBase):
             # everything worked return True, else return False
             if Successful:
 
-                dev.updateStateOnServer("onOffState", pdu_action[state]['OnOffState'])
+                dev.updateStateOnServer("onOffState", 
+                                        pdu_action[state]['OnOffState'])
+
                 if state in ['on', 'off']:
                     indigo.server.log(f'Turned "{dev.name}" {state}')
                 elif state == 'outletOffImmediately':
-                    indigo.server.log(f'Turned "{dev.name}" off')
+                    indigo.server.log(f'Turned "{dev.name}" off immediately')
                 elif state == 'outletReboot':
-                    indigo.server.log(f'Rebooting "{dev.name}" immediately')                
+                    indigo.server.log(f'Rebooted "{dev.name}"')                
                 elif state == 'outletOffWithDelay':
                     if PowerOffTime == "Not configured":
-                        indigo.server.log(f'Turning off "{dev.name}" after the PDU configured delay')
+                        indigo.server.log(f'Turning off "{dev.name}" '
+                                           'after the PDU configured delay')
                     else:
-                        indigo.server.log(f'Turning off "{dev.name}" after a {PowerOffTime} second delay')
+                        indigo.server.log(f'Turning off "{dev.name}" '
+                                           'after a {PowerOffTime} second delay')
                 elif state == 'outletOnWithDelay':
                     if PowerOnTime == "Not configured":
-                        indigo.server.log(f'Turning on "{dev.name}" after the PDU configured delay')
+                        indigo.server.log(f'Turning on "{dev.name}" '
+                                           'after the PDU configured delay')
                     else:
-                        indigo.server.log(f'Turning on "{dev.name}" after a {PowerOnTime} second  delay')
+                        indigo.server.log(f'Turning on "{dev.name}" '
+                                           'after a {PowerOnTime} second  delay')
                 elif state == 'outletRebootWithDelay':
                     if outletRebootWithDelay == "Not configured":
-                        indigo.server.log(f'Rebooting "{dev.name}" after the PDU configured delay')
+                        indigo.server.log(f'Rebooting "{dev.name}" '
+                                           'after the PDU configured delay')
                     else:
-                        indigo.server.log(f'Rebooting "{dev.name}" after a {RebootDuration} second delay')
+                        indigo.server.log(f'Rebooting "{dev.name}" '
+                                           'after a {RebootDuration} second delay')
 
                 else:  # not sure you'd ever get here
                     indigo.server.log(f"Undefined state encountered: {state}")
 
             else:  # when unsuccessful
 
-                indigo.server.log(f'send "{dev.name}" {state} failed', isError=True)
+                indigo.server.log(f'send "{dev.name}" {state} failed', 
+                                  isError=True)
 
         else:
             self.errorLog(u"Error: State is not configured for use")
@@ -356,14 +394,15 @@ class Plugin(indigo.PluginBase):
                 self.debugLog("outlet_list: {0}".format(outlet_list))
                 self.debugLog("outlet: {0}".format(outlet))
 
-                # determine if outlet number configured higher than what is available on PDU
+                # is outlet number higher than what is available on PDU
                 if len(outlet_list) < int(outlet):
+                    # return error result code
                     result_code = 2
                 elif outlet_list[int(outlet) - 1] == "Off":
                     result_code = 0
                 elif outlet_list[int(outlet) - 1] == "On":
                     result_code = 1
-                else:
+                else:  # return error result code
                     result_code = 2
 
                 # since successful, exit loop
@@ -406,9 +445,9 @@ class Plugin(indigo.PluginBase):
             OutletRebootDuration = dev.pluginProps["OutletRebootDuration"]
 
             self.debugLog("swapRebootForOff: {0}".format(swapRebootForOff))
-            self.debugLog("OutletPowerOnTime: {0}".format(OutletPowerOnTime))
-            self.debugLog("OutletPowerOffTime: {0}".format(OutletPowerOffTime))
-            self.debugLog("OutletRebootDuration: {0}".format(OutletRebootDuration))
+            self.debugLog("PowerOnTime: {0}".format(OutletPowerOnTime))
+            self.debugLog("PowerOffTime: {0}".format(OutletPowerOffTime))
+            self.debugLog("RebootDuration: {0}".format(OutletRebootDuration))
 
 
             dev.updateStateOnServer("swapRebootForOff", swapRebootForOff)
@@ -418,11 +457,11 @@ class Plugin(indigo.PluginBase):
 
             if result_code == 0:
                 dev.updateStateOnServer("onOffState", False)
-                indigo.server.log(u'Device "%s" is off' % (dev.name))
+                indigo.server.log(f'Device "{dev.name}" is off')
                 return True
             elif result_code == 1:
                 dev.updateStateOnServer("onOffState", True)
-                indigo.server.log(u'Device "%s" is on' % dev.name)
+                indigo.server.log(f'Device "{dev.name}" is on')
                 return True
 
 
