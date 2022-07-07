@@ -512,30 +512,6 @@ class Plugin(indigo.PluginBase):
 
 
     ########################################
-    def readAndUpdateState(self, dev):
-        self.debugLog("readAndUpdateState called and it should be")
-
-        # request state from the PDU & update state variable accordingly
-        result_code = self.getPDUState(dev)
-
-        # also do if 0 or 1
-        if result_code == 2:
-
-            self.errorLog(u'Error: Device "%s" in unknown state' % dev.name)
-            return False
-
-        elif result_code == 0:
-            dev.updateStateOnServer("onOffState", False)
-            indigo.server.log(f'Device "{dev.name}" is off')
-            return True
-
-        elif result_code == 1:
-            dev.updateStateOnServer("onOffState", True)
-            indigo.server.log(f'Device "{dev.name}" is on')
-            return True
-
-
-    ########################################
     # Custom Plugin Action callbacks (defined in Actions.xml)
     ######################
 
