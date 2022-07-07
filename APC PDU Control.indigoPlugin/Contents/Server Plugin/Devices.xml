@@ -42,14 +42,17 @@
                 <Label>Community Name:</Label>
             </Field>
             <Field id="outlet" type="textfield" defaultValue="1">
-                <Label>PDU Outlet:</Label>
+                <Label>PDU Outlet (1-16):</Label>
+            </Field>
+            <Field id="address" type="textfield" defaultValue="Outlet 1">
+                <Label>Outlet Address:</Label>
             </Field>
 
             <Field id="swapRebootForOff" type="checkbox">
                 <Label>Use OFF as Reboot:</Label>
             </Field>
 
-            <Field type="menu" id="sPDUOutletPowerOnTime" defaultValue="Not configured">
+            <Field type="menu" id="OutletPowerOnTime" defaultValue="Not configured">
                 <Label>Power on delay:</Label>
                 <List>
                     <Option value="Not configured">Use the settings on the PDU</Option>                    
@@ -64,7 +67,7 @@
                 </List>
             </Field>
 
-            <Field type="menu" id="sPDUOutletPowerOffTime" defaultValue="Not configured">
+            <Field type="menu" id="OutletPowerOffTime" defaultValue="Not configured">
                 <Label>Power off delay:</Label>
                 <List>
                     <Option value="Not configured">Use the settings on the PDU</Option>                    
@@ -79,7 +82,7 @@
                 </List>
             </Field>
 
-            <Field type="menu" id="sPDUOutletRebootDuration" defaultValue="Not configured">
+            <Field type="menu" id="OutletRebootDuration" defaultValue="Not configured">
                 <Label>Reboot Off/On Delay:</Label>
                 <List>
                     <Option value="Not configured">Use the settings on the PDU</Option>                    
@@ -109,17 +112,17 @@
                 <TriggerLabel>Use OFF as Reboot</TriggerLabel>
                 <ControlPageLabel>Use OFF as Reboot</ControlPageLabel>
             </State>
-            <State id="sPDUOutletPowerOnTime">
+            <State id="OutletPowerOnTime">
                 <ValueType>Integer</ValueType>
                 <TriggerLabel>Power On Time</TriggerLabel>
                 <ControlPageLabel>Power On Time</ControlPageLabel>
             </State>
-            <State id="sPDUOutletPowerOffTime">
+            <State id="OutletPowerOffTime">
                 <ValueType>Integer</ValueType>
                 <TriggerLabel>Power Off Time</TriggerLabel>
                 <ControlPageLabel>Power Off Time</ControlPageLabel>
             </State>
-            <State id="sPDUOutletRebootDuration">
+            <State id="OutletRebootDuration">
                 <ValueType>Integer</ValueType>
                 <TriggerLabel>Reboot OffOn Delay</TriggerLabel>
                 <ControlPageLabel>Reboot OffOn Delay</ControlPageLabel>

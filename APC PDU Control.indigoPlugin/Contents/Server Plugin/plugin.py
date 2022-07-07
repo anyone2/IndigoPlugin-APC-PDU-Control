@@ -24,7 +24,6 @@ class Plugin(indigo.PluginBase):
     ########################################
     def startup(self):
         self.debugLog(u"startup called")
-        self.versionCheck()
 
         # define the MIB file
         self.the_mib_file = "PowerNet-MIB.txt"
@@ -32,15 +31,6 @@ class Plugin(indigo.PluginBase):
 
     def shutdown(self):
         self.logger.debug("shutdown called")
-
-    # wasn't in the new but brought over
-    def stopConcurrentThread(self):
-        self.stopThread = True
-
-
-    ########################################
-    def versionCheck(self):
-        self.debugLog(u"versionCheck() called")
 
 
     ########################################
@@ -103,13 +93,14 @@ class Plugin(indigo.PluginBase):
 
         # TOGGLE ######
         elif action.deviceAction == indigo.kDimmerRelayAction.Toggle:
-            newOnState = not dev.onState
-            if newOnState:
-                # Device is currently off, so turn it on
-                self.setPDUState(dev, "on")
-            else:
+            if dev.onState:
                 # Device is currently on, so turn it off
                 self.setPDUState(dev, "off")
+            else:
+                # Device is currently off, so turn it on
+                self.setPDUState(dev, "on")
+
+
 
         # STATUS REQUEST ######
         elif action.deviceAction == indigo.kDeviceGeneralAction.RequestStatus:
@@ -124,8 +115,9 @@ class Plugin(indigo.PluginBase):
         community = dev.pluginProps["community"]
 
         # cycle thru delays settings
-        for d in ["sPDUOutletPowerOnTime", "sPDUOutletPowerOffTime", "sPDUOutletRebootDuration"]:
-
+        for d in ["sPDUOutletPowerOnTime", 
+                  "sPDUOutletPowerOffTime", 
+                  "sPDUOutletRebootDuration"]:
 
             # if using the settings on the PDU
             if dev.pluginProps[d] == "Not configured":
@@ -145,7 +137,7 @@ class Plugin(indigo.PluginBase):
                                               pduIpAddr, d, outlet, dev.pluginProps[d])
 
                 '''
-                snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletPowerOnTime.5 i 15
+                snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 OutletPowerOnTime.5 i 15
                 
                 The full path the the MIB file is required
                 '''
@@ -183,18 +175,18 @@ class Plugin(indigo.PluginBase):
 
         else:  # at end of for loop
 
-            sPDUOutletPowerOnTime = dev.pluginProps["sPDUOutletPowerOnTime"]
-            sPDUOutletPowerOffTime = dev.pluginProps["sPDUOutletPowerOffTime"]
-            sPDUOutletRebootDuration = dev.pluginProps["sPDUOutletRebootDuration"]
+            OutletPowerOnTime = dev.pluginProps["OutletPowerOnTime"]
+            OutletPowerOffTime = dev.pluginProps["OutletPowerOffTime"]
+            OutletRebootDuration = dev.pluginProps["OutletRebootDuration"]
 
-            self.debugLog("sPDUOutletPowerOnTime: {0}".format(sPDUOutletPowerOnTime))
-            self.debugLog("sPDUOutletPowerOffTime: {0}".format(sPDUOutletPowerOffTime))
-            self.debugLog("sPDUOutletRebootDuration: {0}".format(sPDUOutletRebootDuration))
+            self.debugLog("OutletPowerOnTime: {0}".format(OutletPowerOnTime))
+            self.debugLog("OutletPowerOffTime: {0}".format(OutletPowerOffTime))
+            self.debugLog("OutletRebootDuration: {0}".format(OutletRebootDuration))
 
 
-            dev.updateStateOnServer("sPDUOutletPowerOnTime", sPDUOutletPowerOnTime)
-            dev.updateStateOnServer("sPDUOutletPowerOffTime", sPDUOutletPowerOffTime)
-            dev.updateStateOnServer("sPDUOutletRebootDuration", sPDUOutletRebootDuration)
+            dev.updateStateOnServer("OutletPowerOnTime", OutletPowerOnTime)
+            dev.updateStateOnServer("OutletPowerOffTime", OutletPowerOffTime)
+            dev.updateStateOnServer("OutletRebootDuration", OutletRebootDuration)
 
 
     ########################################
@@ -213,9 +205,9 @@ class Plugin(indigo.PluginBase):
         pduIpAddr = dev.pluginProps["ipAddr"]
         community = dev.pluginProps["community"]
         swapRebootForOff = dev.pluginProps["swapRebootForOff"]
-        PowerOnTime = dev.pluginProps["sPDUOutletPowerOnTime"]
-        PowerOffTime = dev.pluginProps["sPDUOutletPowerOffTime"]
-        RebootDuration = dev.pluginProps["sPDUOutletRebootDuration"]
+        PowerOnTime = dev.pluginProps["OutletPowerOnTime"]
+        PowerOffTime = dev.pluginProps["OutletPowerOffTime"]
+        RebootDuration = dev.pluginProps["OutletRebootDuration"]
 
         # if user configured device's Off to be Reboot
         if swapRebootForOff and state == "off":
@@ -224,93 +216,100 @@ class Plugin(indigo.PluginBase):
         # send command to PDU to change state of an outlet
         # FYI: "4" is an error condition.
 
-        # validate inputs
-        if state == "on":
-            theStateCode = " i 1"
-            OnOffState = True
+        pdu_action = {
+                      'on': {'theStateCode': " i 1", 
+                             "OnOffState": True},
+                      'off': {'theStateCode': " i 2", 
+                              "OnOffState": False},
+                      'outletReboot': {'theStateCode': " i 3", 
+                                       "OnOffState": True},
+                      'outletOnWithDelay': {'theStateCode': " i 5", 
+                                            "OnOffState": True},
+                      'outletOffWithDelay': {'theStateCode': " i 6", 
+                                             "OnOffState": False},
+                      'outletRebootWithDelay': {'theStateCode': " i 7", 
+                                                "OnOffState": True},
+                      'outletOffImmediately': {'theStateCode': " i 2", 
+                                               "OnOffState": False},
+                     }
 
-        elif state == "off":
-            theStateCode = " i 2"
-            OnOffState = False
+        # if known state
+        if pdu_action.get(state):
 
-        elif state == "outletReboot":
-            theStateCode = " i 3"
-            OnOffState = True
+            # determine where the plugin is running
+            # use that to find the full path to the MIB file
+            the_path = "'{0}/{1}'".format(os.getcwd(), self.the_mib_file)
 
-        elif state == "outletOnWithDelay":
-            theStateCode = " i 5"
-            OnOffState = True
+            # put together the snmpwalk command to determine device status
+            template = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDUOutletCtl.{3}{4}"
+            the_command = template.format(the_path, community,
+                                          pduIpAddr, outlet, 
+                                          pdu_action[state]['theStateCode'])
 
-        elif state == "outletOffWithDelay":
-            theStateCode = " i 6"
-            OnOffState = False
+            '''
+            snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletCtl.5 i 1
+            
+            The full path the the MIB file is required
+            '''
 
-        elif state == "outletRebootWithDelay":
-            theStateCode = " i 7"
-            OnOffState = True
+            # Try a max of three (3) times
+            # pausing for 5 seconds between attempts
+            for r in range(1, 4):
 
+                stdout_value, stderr_value = self.shellCommand(the_command, True)
+
+                self.debugLog(u"Sending to PDU: {0}".format(the_command))
+                self.debugLog(u"stdout value: {0}".format(stdout_value))
+
+                if stderr_value:
+                    # some type of error
+                    self.debugLog(u"Failed to send to PDU")
+                    self.debugLog(u"stderr value: {0}".format(stderr_value))
+                    Successful = False
+                    time.sleep(5)
+                else:
+                    # everything worked
+                    self.debugLog(u"Sent to PDU")
+                    Successful = True
+                    break
+
+            # everything worked return True, else return False
+            if Successful:
+
+                dev.updateStateOnServer("onOffState", pdu_action[state]['OnOffState'])
+                if state in ['on', 'off']:
+                    indigo.server.log(f'Turned "{dev.name}" {state}')
+                elif state == 'outletOffImmediately':
+                    indigo.server.log(f'Turned "{dev.name}" off')
+                elif state == 'outletReboot':
+                    indigo.server.log(f'Rebooting "{dev.name}" immediately')                
+                elif state == 'outletOffWithDelay':
+                    if PowerOffTime == "Not configured":
+                        indigo.server.log(f'Turning off "{dev.name}" after the PDU configured delay')
+                    else:
+                        indigo.server.log(f'Turning off "{dev.name}" after a {PowerOffTime} second delay')
+                elif state == 'outletOnWithDelay':
+                    if PowerOnTime == "Not configured":
+                        indigo.server.log(f'Turning on "{dev.name}" after the PDU configured delay')
+                    else:
+                        indigo.server.log(f'Turning on "{dev.name}" after a {PowerOnTime} second  delay')
+                elif state == 'outletRebootWithDelay':
+                    if outletRebootWithDelay == "Not configured":
+                        indigo.server.log(f'Rebooting "{dev.name}" after the PDU configured delay')
+                    else:
+                        indigo.server.log(f'Rebooting "{dev.name}" after a {RebootDuration} second delay')
+
+                else:  # not sure you'd ever get here
+                    indigo.server.log(f"Undefined state encountered: {state}")
+
+            else:  # when unsuccessful
+
+                indigo.server.log(f'send "{dev.name}" {state} failed', isError=True)
 
         else:
             self.errorLog(u"Error: State is not configured for use")
             return(False)
 
-        # determine where the plugin is running
-        # use that to find the full path to the MIB file
-        the_path = "'{0}/{1}'".format(os.getcwd(), self.the_mib_file)
-
-        # put together the snmpwalk command to determine device status
-        template = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDUOutletCtl.{3}{4}"
-        the_command = template.format(the_path, community,
-                                      pduIpAddr, outlet, theStateCode)
-
-        '''
-        snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletCtl.5 i 1
-        
-        The full path the the MIB file is required
-        '''
-
-        # Try a max of three (3) times
-        # pausing for 5 seconds between attempts
-        for r in range(1, 4):
-
-            stdout_value, stderr_value = self.shellCommand(the_command, True)
-
-            self.debugLog(u"Sending to PDU: {0}".format(the_command))
-            self.debugLog(u"stdout value: {0}".format(stdout_value))
-
-            if stderr_value:
-                # some type of error
-                self.debugLog(u"Failed to send to PDU")
-                self.debugLog(u"stderr value: {0}".format(stderr_value))
-                Successful = False
-                time.sleep(5)
-            else:
-                # everything worked
-                self.debugLog(u"Sent to PDU")
-                Successful = True
-                break
-
-        # everything worked return True, else return False
-        if Successful:
-
-            dev.updateStateOnServer("onOffState", OnOffState)
-            if state in ['on', 'off']:
-                indigo.server.log(f'Turned "{dev.name}" {state}')
-            elif state == 'outletReboot':
-                indigo.server.log(f'Rebooting "{dev.name}" immediately')                
-            elif state == 'outletOffWithDelay':
-                indigo.server.log(f'Turning off "{dev.name}" after a {PowerOffTime} second delay')
-            elif state == 'outletOnWithDelay':
-                indigo.server.log(f'Turning on "{dev.name}" after a {PowerOnTime} second  delay')
-            elif state == 'outletRebootWithDelay':
-                indigo.server.log(f'Rebooting "{dev.name}" after a {RebootDuration} second delay')
-
-            else:
-                indigo.server.log(f"Undefined state encountered: {state}")
-
-        else:
-            the_template = u'send "%s" %s failed'
-            indigo.server.log(the_template % (dev.name, state), isError=True)
 
     ########################################
     def getPDUState(self, dev):
@@ -357,10 +356,8 @@ class Plugin(indigo.PluginBase):
                 self.debugLog("outlet_list: {0}".format(outlet_list))
                 self.debugLog("outlet: {0}".format(outlet))
 
-                #
-                self.debugLog("outlet_list: {0}".format(len(outlet_list)))
+                # determine if outlet number configured higher than what is available on PDU
                 if len(outlet_list) < int(outlet):
-                    # self.debugLog("len(outlet_list) {0} > (int(outlet)) {1}".format(len(outlet_list), int(outlet)))
                     result_code = 2
                 elif outlet_list[int(outlet) - 1] == "Off":
                     result_code = 0
@@ -404,20 +401,20 @@ class Plugin(indigo.PluginBase):
             dev.updateStateOnServer("swapRebootForOff", swapRebootForOff)
 
             swapRebootForOff = dev.pluginProps["swapRebootForOff"]
-            sPDUOutletPowerOnTime = dev.pluginProps["sPDUOutletPowerOnTime"]
-            sPDUOutletPowerOffTime = dev.pluginProps["sPDUOutletPowerOffTime"]
-            sPDUOutletRebootDuration = dev.pluginProps["sPDUOutletRebootDuration"]
+            OutletPowerOnTime = dev.pluginProps["OutletPowerOnTime"]
+            OutletPowerOffTime = dev.pluginProps["OutletPowerOffTime"]
+            OutletRebootDuration = dev.pluginProps["OutletRebootDuration"]
 
             self.debugLog("swapRebootForOff: {0}".format(swapRebootForOff))
-            self.debugLog("sPDUOutletPowerOnTime: {0}".format(sPDUOutletPowerOnTime))
-            self.debugLog("sPDUOutletPowerOffTime: {0}".format(sPDUOutletPowerOffTime))
-            self.debugLog("sPDUOutletRebootDuration: {0}".format(sPDUOutletRebootDuration))
+            self.debugLog("OutletPowerOnTime: {0}".format(OutletPowerOnTime))
+            self.debugLog("OutletPowerOffTime: {0}".format(OutletPowerOffTime))
+            self.debugLog("OutletRebootDuration: {0}".format(OutletRebootDuration))
 
 
             dev.updateStateOnServer("swapRebootForOff", swapRebootForOff)
-            dev.updateStateOnServer("sPDUOutletPowerOnTime", sPDUOutletPowerOnTime)
-            dev.updateStateOnServer("sPDUOutletPowerOffTime", sPDUOutletPowerOffTime)
-            dev.updateStateOnServer("sPDUOutletRebootDuration", sPDUOutletRebootDuration)
+            dev.updateStateOnServer("OutletPowerOnTime", OutletPowerOnTime)
+            dev.updateStateOnServer("OutletPowerOffTime", OutletPowerOffTime)
+            dev.updateStateOnServer("OutletRebootDuration", OutletRebootDuration)
 
             if result_code == 0:
                 dev.updateStateOnServer("onOffState", False)
@@ -440,7 +437,7 @@ class Plugin(indigo.PluginBase):
         self.setPDUState(dev, "outletOnWithDelay")
 
     def outletOffImmediately(self, plugin_action, dev):
-        self.setPDUState(dev, "off")
+        self.setPDUState(dev, "outletOffImmediately")
 
     def outletOffWithDelay(self, plugin_action, dev):
         self.setPDUState(dev, "outletOffWithDelay")
