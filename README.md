@@ -27,7 +27,7 @@ You can also configured the On/Off/Reboot delays from the Plugin. The delays con
 
 Screenshot of the required configuration screen on an APC AP9211 MasterSwitch Unit
 ￼
--- Insert screenshot here --
+* (Insert screenshot here)
 
 ## Test Equipment
 
