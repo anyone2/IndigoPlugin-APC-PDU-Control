@@ -158,7 +158,7 @@ class Plugin(indigo.PluginBase):
 
             else:  # configure the delays on the PDU
 
-                # put together the snmpset command to determine device status
+                # put together the snmpset command to set device parameters
                 snmpset = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDU{3}.{4} i {5}"
                 the_command = snmpset.format(self.the_path, 
                                              community,
@@ -286,7 +286,7 @@ class Plugin(indigo.PluginBase):
         # if known state
         if pdu_action.get(state):
 
-            # put together the snmpwalk command to determine device status
+            # put together the snmpset command to set device parameters
             template = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDUOutletCtl.{3}{4}"
             the_command = template.format(self.the_path, community,
                                           pduIpAddr, outlet, 
