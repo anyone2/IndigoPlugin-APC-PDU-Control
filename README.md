@@ -25,7 +25,7 @@ You can also configured the On/Off/Reboot delays from the Plugin. The delays con
 
     Note: Write+ is preferred since it allows someone to be logged into the Web Portal and still allow Indigo to change an outlets state.
 
-Screenshot of the required configuration screen on an APC AP9211 MasterSwitch Unit
+Screenshot of the required configuration on an APC AP9211 MasterSwitch Unit
 ￼
 * (Insert screenshot here)
 
