@@ -214,8 +214,8 @@ class Plugin(indigo.PluginBase):
                            "OutletRebootDuration"]:
 
             # put together the snmpwalk command to determine device status
-            template = "snmpwalk -t 2 -m {0} -v 1 -c {1} {2} sPDU{3}.{4}"
-            the_command = template.format(self.the_path, community, 
+            snmpwalk = "snmpwalk -t 2 -m {0} -v 1 -c {1} {2} sPDU{3}.{4}"
+            the_command = snmpwalk.format(self.the_path, community, 
                                           pduIpAddr, delay_name, outlet)
 
             # Execute command and capture the output
@@ -224,7 +224,7 @@ class Plugin(indigo.PluginBase):
             if stderr_value:
 
                 # display error message
-                self.debugLog(f"Error: Retrying connection to Device {dev.name}")
+                self.errorLog(f"Error: Attempting connection to Device {dev.name}")
 
                 # if debuging is enabled, report the error
                 self.debugLog(f"Error: {stderr_value}")
@@ -287,10 +287,10 @@ class Plugin(indigo.PluginBase):
         if pdu_action.get(state):
 
             # put together the snmpset command to set device parameters
-            template = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDUOutletCtl.{3}{4}"
-            the_command = template.format(self.the_path, community,
-                                          pduIpAddr, outlet, 
-                                          pdu_action[state]['theStateCode'])
+            snmpset = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDUOutletCtl.{3}{4}"
+            the_command = snmpset.format(self.the_path, community,
+                                         pduIpAddr, outlet, 
+                                         pdu_action[state]['theStateCode'])
 
             '''
             snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletCtl.5 i 1
@@ -370,10 +370,10 @@ class Plugin(indigo.PluginBase):
         if stderr_value:
 
             # display error message
-            self.debugLog(f"Error: Retrying connection to Device {dev.name}")
+            self.errorLog(f"Error: Attempting connection to Device {dev.name}")
 
             # if debuging is enabled, report the error
-            self.debugLog(f"Error: {stderr_value}".format(stderr_value))
+            self.debugLog(f"Error: {stderr_value}")
 
         else:
 
