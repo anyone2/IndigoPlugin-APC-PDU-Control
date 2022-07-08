@@ -170,7 +170,7 @@ class Plugin(indigo.PluginBase):
                 '''
                 snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletPowerOnTime.5 i 15
                 
-                The full path the the MIB file is required
+                The full path to the MIB file is required
                 '''
                 
                 # Execute command and capture the output
@@ -294,7 +294,8 @@ class Plugin(indigo.PluginBase):
 
             '''
             snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletCtl.5 i 1
-            
+
+            The full path to the MIB file is required            
             '''
 
             # Execute command and capture the output
@@ -380,39 +381,50 @@ class Plugin(indigo.PluginBase):
 
                 # create list of Off/On states returned as
                 # PowerNet-MIB::sPDUMasterState.0 = STRING: "Off Off Off Off Off Off Off Off "
-                outlet_list = str(stdout_value[43:-2]).split()
-                self.debugLog(f"outlet_list: {outlet_list}")
-                self.debugLog(f"outlet: {outlet}")
+                if len(stdout_value) > 43:
+                    outlet_list = str(stdout_value[43:-2]).split()
 
-                # is outlet number higher than what is available on PDU
-                if len(outlet_list) < int(outlet):
+                    self.debugLog(f"outlet_list: {outlet_list}")
+                    self.debugLog(f"outlet: {outlet}")
 
-                    # the PDU returned fewer outlets than the one requested
-                    self.errorLog(f'Error: "{dev.name}" might be misconfigured, '
-                                   'check the outlet number')
+                    # is outlet number higher than what is available on PDU
+                    if len(outlet_list) < int(outlet):
 
-                elif outlet_list[int(outlet) - 1] == "Off":
+                        # the PDU returned fewer outlets than the one requested
+                        self.errorLog(f'Error: "{dev.name}" might be misconfigured, '
+                                       'check the outlet number')
+
+                    elif outlet_list[int(outlet) - 1] == "Off":
+                        
+                        # Outlet is OFF, update server and display to log
+                        dev.updateStateOnServer("onOffState", False)
+                        indigo.server.log(f'Device "{dev.name}" is off')
                     
-                    # Outlet is OFF, update server and display to log
-                    dev.updateStateOnServer("onOffState", False)
-                    indigo.server.log(f'Device "{dev.name}" is off')
-                
-                elif outlet_list[int(outlet) - 1] == "On":
-                
-                    # Outlet is ON, update server and display to log
-                    dev.updateStateOnServer("onOffState", True)
-                    indigo.server.log(f'Device "{dev.name}" is on')
+                    elif outlet_list[int(outlet) - 1] == "On":
+                    
+                        # Outlet is ON, update server and display to log
+                        dev.updateStateOnServer("onOffState", True)
+                        indigo.server.log(f'Device "{dev.name}" is on')
 
-                else:  # unknown value encountered
+                    else:  # unknown value encountered
+
+                        # some error occured
+                        self.errorLog(f'Error: Device "{dev.name}" in unknown state')
+                        self.debugLog(f"value: {outlet_list[int(outlet) - 1]}")                   
+                        self.debugLog(f"stdout_value: {stdout_value}")
+
+                else:  # stdout_value is not long enough to be valid
 
                     # some error occured
                     self.errorLog(f'Error: Device "{dev.name}" in unknown state')
+                    self.debugLog(f"stdout_value: {stdout_value}")
+
             else:
 
                 # some error occured
                 self.errorLog(f'Error: Device "{dev.name}" in unknown state')
-        
 
+        
     ########################################
     # Custom Plugin Action callbacks 
     ########################################
