@@ -11,7 +11,7 @@
     <key>CFBundleDisplayName</key>
     <string>APC PDU Control</string>
     <key>CFBundleIdentifier</key>
-    <string>com.anyone.apcpdu</string>
+    <string>com.anyone.indigoplugin.apc-pdu-control</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
     <key>CFBundleURLTypes</key>

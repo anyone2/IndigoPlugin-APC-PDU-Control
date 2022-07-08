@@ -10,15 +10,12 @@ import urllib
 import subprocess
 import urllib.error
 
-# Note the "indigo" module is automatically imported and made available inside
-# our global name space by the host process.
 
 ################################################################################
 class Plugin(indigo.PluginBase):
     ########################################
     def __init__(self, plugin_id, plugin_display_name, plugin_version, plugin_prefs):
         super().__init__(plugin_id, plugin_display_name, plugin_version, plugin_prefs)
-        # self.debug = True
         self.debug = plugin_prefs.get("showDebugInfo", False)
 
     ########################################
@@ -75,12 +72,13 @@ class Plugin(indigo.PluginBase):
             addr = valuesDict["ipAddr"]
 
             try:
+
+                # test for valid IP Address
                 socket.inet_aton(addr)
-                # legal IP address
                 return True
 
             except socket.error:
-                # Not legal IP address
+                # the IP Address is Invalid
                 self.errorLog(f'Error: IP Address "{addr}" is invalid')
                 errorDict = indigo.Dict()
                 errorDict["ipAddr"] = ("The value of this field must "
@@ -135,9 +133,11 @@ class Plugin(indigo.PluginBase):
 
         # STATUS REQUEST ######
         elif action.deviceAction == indigo.kDeviceGeneralAction.RequestStatus:
+
+            # get the state configured on the PDU
             self.getPDUState(dev)
 
-            # get the delays configured on each outlet on the PDU
+            # get the three(3) delays on the PDU
             self.getPDUDelays(dev)
 
 
@@ -151,15 +151,15 @@ class Plugin(indigo.PluginBase):
         community = dev.pluginProps["community"]
 
         # cycle thru delays settings
-        for d in ["OutletPowerOnTime", 
-                  "OutletPowerOffTime", 
-                  "OutletRebootDuration"]:
+        for delay_name in ["OutletPowerOnTime", 
+                           "OutletPowerOffTime", 
+                           "OutletRebootDuration"]:
 
             # if using the settings on the PDU
-            if dev.pluginProps[d] == "Not configured":
+            if dev.pluginProps[delay_name] == "Not configured":
 
                 # skip all of this
-                self.debugLog(f"Using PDUs {d} delay for: outlet: {outlet}")
+                self.debugLog(f"Using PDUs {delay_name} delay for: outlet: {outlet}")
 
             else:  # configure the delays on the PDU
 
@@ -172,9 +172,9 @@ class Plugin(indigo.PluginBase):
                 the_command = template.format(the_path, 
                                               community,
                                               pduIpAddr, 
-                                              d, 
+                                              delay_name, 
                                               outlet, 
-                                              dev.pluginProps[d])
+                                              dev.pluginProps[delay_name])
 
                 '''
                 snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletPowerOnTime.5 i 15
@@ -206,7 +206,8 @@ class Plugin(indigo.PluginBase):
                 # everything worked return True, else return False
                 if Successful:
 
-                    self.debugLog(f'send successful for "{dev.name} and delay "{d}"')
+                    self.debugLog(f'send successful for "{dev.name} '
+                                   'and delay "{delay_name}"')
 
 
                 else:
@@ -321,10 +322,6 @@ class Plugin(indigo.PluginBase):
         PowerOffTime = dev.pluginProps["OutletPowerOffTime"]
         RebootDuration = dev.pluginProps["OutletRebootDuration"]
 
-        # if user configured device's Off to be Reboot
-        if UseOffAsReboot and state == "off":
-            state = "outletReboot"
-
         # send command to PDU to change state of an outlet
         # FYI: "4" is an error condition.
 
@@ -398,26 +395,14 @@ class Plugin(indigo.PluginBase):
                 elif state == 'outletReboot':
                     indigo.server.log(f'Rebooted "{dev.name}"')                
                 elif state == 'outletOffWithDelay':
-                    if PowerOffTime == "Not configured":
-                        indigo.server.log(f'Turning off "{dev.name}" '
-                                           'after the PDU configured delay')
-                    else:
-                        indigo.server.log(f'Turning off "{dev.name}" '
-                                           'after a {PowerOffTime} second delay')
+                    indigo.server.log(f'Turning off "{dev.name}" '
+                                      f'after a {PowerOffTime} second delay')
                 elif state == 'outletOnWithDelay':
-                    if PowerOnTime == "Not configured":
-                        indigo.server.log(f'Turning on "{dev.name}" '
-                                           'after the PDU configured delay')
-                    else:
-                        indigo.server.log(f'Turning on "{dev.name}" '
-                                           'after a {PowerOnTime} second  delay')
+                    indigo.server.log(f'Turning on "{dev.name}" '
+                                      f'after a {PowerOnTime} second  delay')
                 elif state == 'outletRebootWithDelay':
-                    if outletRebootWithDelay == "Not configured":
-                        indigo.server.log(f'Rebooting "{dev.name}" '
-                                           'after the PDU configured delay')
-                    else:
-                        indigo.server.log(f'Rebooting "{dev.name}" '
-                                           'after a {RebootDuration} second delay')
+                    indigo.server.log(f'Rebooting "{dev.name}" '
+                                      f'after a {RebootDuration} second delay')
 
                 else:  # not sure you'd ever get here
                     indigo.server.log(f"Undefined state encountered: {state}")
@@ -435,8 +420,6 @@ class Plugin(indigo.PluginBase):
     ########################################
     def getPDUState(self, dev):
         self.debugLog("getPDUState called")
-        # request state of PDU
-        # returns state of all outlets in a single string
 
         # get IP, community name & outlet from props
         outlet = dev.pluginProps["outlet"]
