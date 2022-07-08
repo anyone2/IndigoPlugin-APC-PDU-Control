@@ -20,25 +20,26 @@ This plugin has the ability to controls the On/Off/Reboot function of the PDU an
 You can also configured the On/Off/Reboot delays from the Plugin and the delay values configured on the PDU as Custom States.
 
 
-## Test Equipment
-
-* APC MasterSwitch AP9211 
-* APC AP9606 Web/SNMP Management SmartSlot Card
-
-
 ## Configuration of your APC PDU
 
 1) You must configure the APC PDU with appropriate Community Names. 
 
-    Access Type read should be set to '  public  '
-    Acces Type Write+ should be set to '  private  '
+* Access Type read should be set to '  public  '
+* Acces Type Write+ should be set to '  private  '
 
-    Note: Write+ is preferred since it allows someone to be logged into the Web Portal and still allow Indigo to change an outlets state.
+* Note: Write+ is preferred since it allows someone to be logged into the Web Portal and still allow Indigo to change an outlets state.
 
 Screenshot of the required configuration screen on an APC AP9211 MasterSwitch Unit
 ￼
+(Insert screen shot from my system)
 
-???
+
+## Test Equipment
+
+This plugin was tested and developed on the following APC hardware:
+
+* APC MasterSwitch AP9211 
+* APC AP9606 Web/SNMP Management SmartSlot Card
 
 
 ## To-Do
