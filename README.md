@@ -39,4 +39,4 @@ This plugin was tested and developed on the following APC hardware:
 
 ## To-Do
 
-The Plugin uses the snmpwalk and snmpset the comes installed on Macs. This plugin would benefit from incorporating the pysnmp module in a future release.
+The Plugin uses the 'snmpwalk' and 'snmpset' commands that comes preinstalled on Macs. This plugin would benefit from incorporating the Python 'PySNMP' module in a future release.
