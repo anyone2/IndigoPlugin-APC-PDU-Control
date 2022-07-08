@@ -4,9 +4,7 @@
 
 import os
 import socket
-import urllib
 import subprocess
-import urllib.error
 
 
 ################################################################################
@@ -21,7 +19,7 @@ class Plugin(indigo.PluginBase):
         self.debugLog(u"startup called")
 
         # determine where the plugin is running and path to MIB
-        self.the_path = "'{0}/{1}'".format(os.getcwd(), "PowerNet-MIB.txt")
+        self.the_path = f"'{os.getcwd()}/PowerNet-MIB.txt'"
 
 
     def shutdown(self):
@@ -37,10 +35,10 @@ class Plugin(indigo.PluginBase):
         pduIpAddr = dev.pluginProps["ipAddr"]
         outlet = dev.pluginProps["outlet"]
 
-        self.debugLog("Device: {0}".format(dev.name))
-        self.debugLog("Community Name: {0}".format(community))
-        self.debugLog("IP address: {0}".format(pduIpAddr))
-        self.debugLog("Outlet: {0}".format(outlet))
+        self.debugLog(f"Device: {dev.name}")
+        self.debugLog(f"Community Name: {community}")
+        self.debugLog(f"IP address: {pduIpAddr}")
+        self.debugLog(f"Outlet: {outlet}")
 
         # get the state of the outlets
         self.getPDUState(dev)
@@ -58,8 +56,7 @@ class Plugin(indigo.PluginBase):
         # validate supplied values
         outletNum = int(valuesDict["outlet"])
         if outletNum < 1 or outletNum > 16:
-            template = u'Error: Outlet "{0}" must be between 1 & 16'
-            self.errorLog(template.format(outletNum))
+            self.errorLog(f'Error: Outlet "{outletNum}" must be between 1 & 16')
             errorDict = indigo.Dict()
             errorDict["outlet"] = ("The value of this field must "
                                    "be between 1 & 16")
@@ -67,16 +64,16 @@ class Plugin(indigo.PluginBase):
 
         else:
 
-            addr = valuesDict["ipAddr"]
-
+            
             try:
 
-                # test for valid IP Address
+                # test for a valid IP Address
+                addr = valuesDict["ipAddr"]
                 socket.inet_aton(addr)
                 return True
 
-            except socket.error:
-                # the IP Address is Invalid
+            except socket.error:  # invalid IP address
+
                 self.errorLog(f'Error: IP Address "{addr}" is invalid')
                 errorDict = indigo.Dict()
                 errorDict["ipAddr"] = ("The value of this field must "
@@ -86,9 +83,9 @@ class Plugin(indigo.PluginBase):
 
     ###################################################
 
-    def shellCommand(self, the_command, shellValue):
+    def shellCommand(self, the_command, shell_value):
         proc = subprocess.Popen(the_command,
-                                shell=shellValue,
+                                shell=shell_value,
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, )
@@ -156,7 +153,7 @@ class Plugin(indigo.PluginBase):
             # if using the settings on the PDU
             if dev.pluginProps[delay_name] == "Not configured":
 
-                # skip all of this
+                # Do not set any delays
                 self.debugLog(f"Using PDUs {delay_name} delay for: outlet: {outlet}")
 
             else:  # configure the delays on the PDU
@@ -196,14 +193,13 @@ class Plugin(indigo.PluginBase):
                         self.debugLog(f'send successful for "{dev.name} '
                                       f'and delay "{delay_name}"')
                     
-                    else:  # some error likely occurred
+                    else:  # stdout_value was blank, some error likely occurred
 
                         indigo.server.log(f'send failed "{dev.name}", unable to set '
                                           f'delay for {delay_name}', isError=True)
 
 
     ########################################
-    # request the PDU On, Off and reboot delays
     def getPDUDelays(self, dev):
         self.debugLog("getPDUDelays called")
 
@@ -242,20 +238,16 @@ class Plugin(indigo.PluginBase):
 
                     # update delay on server
                     dev.updateStateOnServer(delay_name, the_delay)
-                    self.debugLog('{0}-{1} is configured with a "{2}" delay '
-                                  'of {3} seconds'.format(outlet, 
-                                                          dev.name, 
-                                                          delay_name, 
-                                                          the_delay))
 
-                else:  # likely a non-existing port
+                    self.debugLog(f'{outlet}-{dev.name} is configured '
+                                  f'with a "{delay_name}" delay of '
+                                  f'{the_delay} seconds')
+
+                else:  # stdout_value was blank, likely a non-existing port
 
                     dev.updateStateOnServer(delay_name, 'unknown')
-                    indigo.server.log('{0}-{1} has an issue, the "{2}" delay '
-                                      'is "Unknown"'.format(outlet, 
-                                                            dev.name, 
-                                                            delay_name),
-                                      isError=True)
+                    indigo.server.log(f'{outlet}-{dev.name} has an issue, with '
+                                      f'the "{delay_name}" delay', isError=True)
 
 
     ########################################
@@ -321,31 +313,33 @@ class Plugin(indigo.PluginBase):
             else:
 
                 if stdout_value:
-
-                    self.debugLog(u"Sent to PDU")
                     
                     if state in ['on', 'off']:
                         indigo.server.log(f'Turned "{dev.name}" {state}')
+                        dev.updateStateOnServer("onOffState", 
+                                                pdu_action[state]['OnOffState'])
+
                     elif state == 'outletOffImmediately':
                         indigo.server.log(f'Turned "{dev.name}" off immediately')
+                        dev.updateStateOnServer("onOffState", 'off')
                     elif state == 'outletReboot':
                         indigo.server.log(f'Rebooted "{dev.name}"')                
+                        dev.updateStateOnServer("onOffState", 'on')
                     elif state == 'outletOffWithDelay':
                         indigo.server.log(f'Turning off "{dev.name}" '
                                           f'after a {PowerOffTime} second delay')
+                        dev.updateStateOnServer("onOffState", 'off')
                     elif state == 'outletOnWithDelay':
                         indigo.server.log(f'Turning on "{dev.name}" '
                                           f'after a {PowerOnTime} second  delay')
+                        dev.updateStateOnServer("onOffState", 'on')
                     elif state == 'outletRebootWithDelay':
                         indigo.server.log(f'Rebooting "{dev.name}" '
                                           f'after a {RebootDuration} second delay')
+                        dev.updateStateOnServer("onOffState", 'on')
 
                     else:  # not sure you'd ever get here
                         indigo.server.log(f"Undefined state encountered: {state}")
-
-                    # update the state on the server
-                    dev.updateStateOnServer("onOffState", 
-                                            pdu_action[state]['OnOffState'])
 
                 else:  # stdout_value was blank
 
@@ -420,9 +414,8 @@ class Plugin(indigo.PluginBase):
         
 
     ########################################
-    # Custom Plugin Action callbacks (defined in Actions.xml)
-    ######################
-
+    # Custom Plugin Action callbacks 
+    ########################################
     def outletOnImmediately(self, plugin_action, dev):
         self.setPDUState(dev, "on")
 
