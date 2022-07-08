@@ -1,10 +1,13 @@
 # APC PDU Control
 
-This plugin for the [Indigo Domotics](http://www.indigodomo.com/) home automation platform that allows communication with a APC Power Distribution Unit (PDU) via Simple Network Management Protocol (SNMP)
+This plugin for the [Indigo Domotics](http://www.indigodomo.com/) home automation platform allows communication with a APC Power Distribution Unit (PDU) via Simple Network Management Protocol (SNMP)
 
 This plugin has the ability to controls the On/Off/Reboot function of outlets on APC's MasterSwitch PDUs
 
-Supported Operations
+This plugin has the ability to controls the On/Off/Reboot function of the PDU and should work with of APC MasterSwitch devices.
+
+
+## Supported Operations
 
 * Turn on
 * Turn off
@@ -15,6 +18,27 @@ Supported Operations
 * Delayed Reboot
 
 You can also configured the On/Off/Reboot delays from the Plugin and the delay values configured on the PDU as Custom States.
+
+
+## Test Equipment
+
+* APC MasterSwitch AP9211 
+* APC AP9606 Web/SNMP Management SmartSlot Card
+
+
+## Configuration of your APC PDU
+
+1) You must configure the APC PDU with appropriate Community Names. 
+
+    Access Type read should be set to '  public  '
+    Acces Type Write+ should be set to '  private  '
+
+    Note: Write+ is preferred since it allows someone to be logged into the Web Portal and still allow Indigo to change an outlets state.
+
+Screenshot of the required configuration screen on an APC AP9211 MasterSwitch Unit
+￼
+
+???
 
 
 ## To-Do
