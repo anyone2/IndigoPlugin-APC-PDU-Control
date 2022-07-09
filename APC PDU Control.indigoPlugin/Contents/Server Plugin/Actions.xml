@@ -34,4 +34,105 @@
         <Name>Reboot outlet after configured delay</Name>
         <CallbackMethod>outletRebootWithDelay</CallbackMethod>
     </Action>
+
+    <Action id="turnAllOnNow">
+        <Name>Turn On All Outlets Immediately</Name>
+        <CallbackMethod>TurnAllOnImmediately</CallbackMethod>
+        <ConfigUI>
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+                <Label>IP Address:</Label>
+            </Field>
+            <Field id="community" type="textfield" defaultValue="private">
+                <Label>Community Name:</Label>
+            </Field>
+            <Field id="simpleSeparator1" type="separator"/>
+            <Field id="autoLabel" type="label" >
+                <Label>Immediately turn ON all outlets</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
+    <Action id="turnAllOnSequence">
+        <Name>Turn On All Outlets in Sequence</Name>
+        <CallbackMethod>TurnAllOnSequence</CallbackMethod>
+        <ConfigUI>
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+                <Label>IP Address:</Label>
+            </Field>
+            <Field id="community" type="textfield" defaultValue="private">
+                <Label>Community Name:</Label>
+            </Field>
+            <Field id="simpleSeparator2" type="separator"/>
+            <Field id="autoLabel" type="label" >
+                <Label>Turn ON all outlets by using the PowerOnTime value for each outlet</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
+
+    <Action id="turnAllOffNow">
+        <Name>Turn Off All Outlets Immediately</Name>
+        <CallbackMethod>TurnAllOffImmediately</CallbackMethod>
+
+        <ConfigUI>
+            <Field id="ipAddr" type="textfield">
+                <Label>IP Address:</Label>
+            </Field>
+            <Field id="community" type="textfield" defaultValue="private">
+                <Label>Community Name:</Label>
+            </Field>
+            <Field id="simpleSeparator3" type="separator"/>
+            <Field id="autoLabel" type="label" >
+                <Label>Immediately turn OFF all outlets</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
+
+    <Action id="rebootAllNow">
+        <Name>Reboot All Outlets Immediately</Name>
+        <CallbackMethod>RebootAllImmediately</CallbackMethod>
+        <ConfigUI>
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+                <Label>IP Address:</Label>
+            </Field>
+            <Field id="community" type="textfield" defaultValue="private">
+                <Label>Community Name:</Label>
+            </Field>
+            <Field id="simpleSeparator4" type="separator"/>
+            <Field id="autoLabel" type="label" >
+                <Label>Immediately reboot all outlets based on MasterConfigReboot value</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
+    <Action id="rebootAllSequence">
+        <Name>Reboot All Outlets in Sequence</Name>
+        <CallbackMethod>RebootAllSequence</CallbackMethod>
+                <ConfigUI>
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+                <Label>IP Address:</Label>
+            </Field>
+            <Field id="community" type="textfield" defaultValue="private">
+                <Label>Community Name:</Label>
+            </Field>
+            <Field id="simpleSeparator5" type="separator"/>
+            <Field id="autoLabel" type="label" >
+                <Label>Reboot in sequence, Turn OFF based on OutletPowerOffTime and Turn back ON based on MasterConfigReboot value</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
+
+    <Action id="turnAllOffSequence">
+        <Name>Turn All Outlets Off in Sequence</Name>
+        <CallbackMethod>TurnAllOffSequence</CallbackMethod>
+        <ConfigUI>
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+                <Label>IP Address:</Label>
+            </Field>
+            <Field id="community" type="textfield" defaultValue="private">
+                <Label>Community Name:</Label>
+            </Field>
+            <Field id="simpleSeparator6" type="separator"/>
+            <Field id="autoLabel" type="label" >
+                <Label>Turn OFF all outles in sequence by using each outlets OutletPowerOffTime value</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
 </Actions>

@@ -424,7 +424,141 @@ class Plugin(indigo.PluginBase):
                 # some error occured
                 self.errorLog(f'Error: Device "{dev.name}" in unknown state')
 
-        
+
+    ########################################
+    def setAllState(self, plugin_action, state):
+        self.debugLog("setAllState called")
+
+        # get IP & community name from props
+        ip_address = plugin_action.props.get("ipAddr")
+        community = plugin_action.props.get("community")
+
+        pdu_action = {
+                      'AllOnImmediately': {'theStateCode': " i 1", 
+                                           "OnOffState": True},
+                      'AllOnSequence': {'theStateCode': " i 2", 
+                                        "OnOffState": False},
+                      'AllOffImmediately': {'theStateCode': " i 3", 
+                                           "OnOffState": False},
+                      'RebootAllImmediately': {'theStateCode': " i 5", 
+                                               "OnOffState": True},
+                      'AllOnSequence': {'theStateCode': " i 6", 
+                                        "OnOffState": False},
+                      'RebootAllSequence': {'theStateCode': " i 7", 
+                                            "OnOffState": True},
+                      'AllOffSequence': {'theStateCode': " i 2", 
+                                         "OnOffState": False},
+                     }
+
+        # if known state
+        if pdu_action.get(state):
+
+            # put together the snmpset command to set device parameters
+            snmpset = (f"snmpset -t 2 -v 1 -c {community} {ip_address} "
+                       f"1.3.6.1.4.1.318.1.1.4.2.1.0 "
+                       f"{pdu_action[state]['theStateCode']}")
+
+            # snmpset -t 2 -v 1 -c private -v 1 192.168.0.232 1.3.6.1.4.1.318.1.1.4.2.1.0 i 1
+            
+            # Execute command and capture the output
+            stdout_value, stderr_value = self.shellCommand(snmpset, True)
+
+            self.debugLog(f"Sending to PDU: {snmpset}")
+            self.debugLog(f"stdout value: {stdout_value}")
+
+            if stderr_value:
+                # some type of error
+                self.debugLog("Failed to send to PDU")
+                self.debugLog(f"stderr value: {stderr_value}")
+                indigo.server.log(f'send "All" {state} failed', isError=True)
+
+            else:
+
+                if stdout_value:
+                    
+                    if state == 'AllOnImmediately':
+                        indigo.server.log(f'Turned "All" On immediately')
+                        # dev.updateStateOnServer("onOffState", 'off')
+                        # interesting...you likely need to update every device
+                        # every CONFIGURED outlet, with the same IP and community
+                        # ouch...you have to apply the rules it will apply with delays...?
+                        # no actually all devices were turned off but some did have delays, so 
+                        # explaining the delays may be useful. 
+                        self.updateAll(community, ip_address, state, 'on')
+
+                    elif state == 'AllOnSequence':
+                        indigo.server.log(f'Turning "All" On in Sequence')                
+                        self.updateAll(community, ip_address, state, 'on')
+
+                    elif state == 'AllOffImmediately':
+                        indigo.server.log(f'Turning "All" Off immediately')
+                        self.updateAll(community, ip_address, state, 'off')
+
+                    elif state == 'RebootAllImmediately':
+                        # need to test if off becomes on when rebooted
+                        indigo.server.log(f'Rebooting "All" immediately')
+                        self.updateAll(community, ip_address, state, 'on')
+
+                    elif state == 'AllOnSequence':
+                        indigo.server.log(f'Turning "All" On in Sequence')
+                        self.updateAll(community, ip_address, state, 'on')                        
+
+                    elif state == 'RebootAllSequence':
+                        indigo.server.log(f'Rebooting "All" in Sequence')
+                        # need to test if off becomes on when rebooted
+                        self.updateAll(community, ip_address, state, 'on')
+
+                    elif state == 'AllOffSequence':
+                        indigo.server.log(f'Turning "All" Off Sequence')
+                        self.updateAll(community, ip_address, state, 'off')
+
+                    else:  # not sure you'd ever get here
+                        indigo.server.log(f"Undefined state encountered: {state}")
+
+                else:  # stdout_value was blank
+
+                    self.errorLog("Error: some unknown error occurred")
+
+        else:  # unknown state
+
+            self.errorLog("Error: State is not configured for use")
+
+
+    ########################################
+    def updateAll(self, community, ip_address, state, on_off):
+
+        # update the state of the configured outlets with the same IP and community
+        for dev in indigo.devices.iter("self"):
+            if dev.configured:
+                if (dev.pluginProps["ipAddr"] == ip_address):
+                    if (dev.pluginProps["community"] == community):
+
+                        OutletPowerOnTime = dev.states["OutletPowerOnTime"]
+                        OutletPowerOffTime = dev.states["OutletPowerOffTime"]
+
+                        if state == "AllOnSequence":
+                            dev.updateStateOnServer("onOffState", on_off)
+                            indigo.server.log(f'Turning ON "{dev.name}" after a '
+                                              f'{OutletPowerOnTime} second delay')
+
+                        elif (state == "RebootAllImmediately") and dev.onState:
+                            dev.updateStateOnServer("onOffState", on_off)
+                            indigo.server.log(f'Rebooting "{dev.name}", powering '
+                                              f'OFF now, power ON after a '
+                                              f'"sPDUMasterConfigReboot" second delay')
+
+                        elif state == "AllOffSequence":
+                            dev.updateStateOnServer("onOffState", on_off)
+                            indigo.server.log(f'Turning OFF "{dev.name}" after a '
+                                              f'{OutletPowerOffTime} second delay')
+
+                        elif (state == "RebootAllSequence") and dev.onState:
+                            dev.updateStateOnServer("onOffState", on_off)
+                            indigo.server.log(f'Rebooting "{dev.name}" with Off/On Delay '
+                                              f'of {OutletPowerOffTime}/{OutletPowerOnTime} '
+                                              f'seconds')
+
+
     ########################################
     # Custom Plugin Action callbacks 
     ########################################
@@ -445,3 +579,24 @@ class Plugin(indigo.PluginBase):
 
     def outletRebootWithDelay(self, plugin_action, dev):
         self.setPDUState(dev, "outletRebootWithDelay")
+
+    def TurnAllOnImmediately(self, plugin_action, dev):
+        self.setAllState(plugin_action, "AllOnImmediately")
+
+    def TurnAllOnSequence(self, plugin_action, dev):
+        self.setAllState(plugin_action, "AllOnSequence")
+
+    def TurnAllOffImmediately(self, plugin_action, dev):
+        self.setAllState(plugin_action, "AllOffImmediately")
+
+    def RebootAllImmediately(self, plugin_action, dev):
+        self.setAllState(plugin_action, "RebootAllImmediately")
+
+    def TurnAllOnSequence(self, plugin_action, dev):
+        self.setAllState(plugin_action, "AllOnSequence")
+
+    def RebootAllSequence(self, plugin_action, dev):
+        self.setAllState(plugin_action, "RebootAllSequence")
+
+    def TurnAllOffSequence(self, plugin_action, dev):
+        self.setAllState(plugin_action, "AllOffSequence")
