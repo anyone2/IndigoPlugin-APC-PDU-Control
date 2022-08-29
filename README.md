@@ -38,4 +38,4 @@ This plugin was tested and developed on the following APC hardware:
 
 ## To-Do
 
-The Plugin uses the 'snmpwalk' and 'snmpset' commands that comes preinstalled on Macs. This plugin would benefit from incorporating the Python 'PySNMP' module in a future release. As well, the very first version of this plugin had a work-around to handle SMNP traps received from the APC PDU, adding that back in is a To-Do.
+The Plugin uses the 'snmpwalk' and 'snmpset' commands that comes preinstalled on Macs. This plugin would benefit from incorporating the Python 'PySNMP' module in a future release. Additionally, the very first version of this plugin had a work-around to handle SMNP traps received from the APC PDU, adding that back in is a To-Do.
