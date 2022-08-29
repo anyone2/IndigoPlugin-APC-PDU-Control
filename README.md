@@ -32,7 +32,7 @@ This plugin was tested and developed on the following APC hardware:
 
 * APC MasterSwitch AP9211 
 * APC AP9606 Web/SNMP Management SmartSlot Card
-* running APC OS(AOS) v3.0.9.a and Application module v2.2.5.a
+    running APC OS(AOS) v3.0.9.a and Application module v2.2.5.a
 
 
 ## To-Do
