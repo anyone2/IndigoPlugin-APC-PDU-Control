@@ -15,7 +15,7 @@ This plugin has the ability to control the On/Off/Reboot functions of the PDU an
 * Turn All Outlets Off
 * Reboot All Outlets Immediately
 
-You can also configured the On/Off/Reboot delays from within the Plugin. All delays configured on the PDU, are shown as Custom States and effect the behavior of the On/Off/Reboot.
+You can also configured the On/Off/Reboot delays from within the Plugin. All delays configured on the PDU, are shown as Custom States. The configured delays effect the behavior of the delayed On/Off/Reboot.
 
 ## Configuration of your APC PDU
 
@@ -32,8 +32,9 @@ This plugin was tested and developed on the following APC hardware:
 
 * APC MasterSwitch AP9211 
 * APC AP9606 Web/SNMP Management SmartSlot Card
+* running APC OS(AOS) v3.0.9.a and Application module v2.2.5.a
 
 
 ## To-Do
 
-The Plugin uses the 'snmpwalk' and 'snmpset' commands that comes preinstalled on Macs. This plugin would benefit from incorporating the Python 'PySNMP' module in a future release.
+The Plugin uses the 'snmpwalk' and 'snmpset' commands that comes preinstalled on Macs. This plugin would benefit from incorporating the Python 'PySNMP' module in a future release. As well, the very first version of this plugin had a work-around to handle SMNP traps received from the APC PDU, adding that back in is a To-Do.
