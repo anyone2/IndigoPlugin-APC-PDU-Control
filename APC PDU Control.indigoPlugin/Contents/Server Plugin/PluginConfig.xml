@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<PluginConfig>
-	<Field id="showDebugInfo" type="checkbox">
-		<Label>Enable debugging:</Label>
-		<Description>(not recommended)</Description>
-	</Field>
-</PluginConfig>

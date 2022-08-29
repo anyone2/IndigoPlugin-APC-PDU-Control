@@ -10,11 +10,12 @@ This plugin has the ability to control the On/Off/Reboot functions of the PDU an
 * Turn Off
 * Reboot
 * Status Request
-* Delayed Turn On
-* Delayed Turn Off
-* Delayed Reboot
 
-You can also configured the On/Off/Reboot delays from the Plugin. All delays configured on the PDU, are shown as Custom States within the plugin.
+* Turn All Outlets On
+* Turn All Outlets Off
+* Reboot All Outlets Immediately
+
+You can also configured the On/Off/Reboot delays from within the Plugin. All delays configured on the PDU, are shown as Custom States and effect the behavior of the On/Off/Reboot.
 
 ## Configuration of your APC PDU
 

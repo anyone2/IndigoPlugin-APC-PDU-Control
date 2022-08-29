@@ -35,7 +35,7 @@
             <Field id="autoLabel" type="label" >
                 <Label>Enter the configuration details of your APC MasterSwitch PDU:</Label>
             </Field>
-            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.10.165">
                 <Label>IP Address:</Label>
             </Field>
             <Field id="community" type="textfield" defaultValue="private">
@@ -56,7 +56,7 @@
                 <Label>Power on delay:</Label>
                 <List>
                     <Option value="Not configured">Use the settings on the PDU</Option>                    
-                    <Option value="-1">Never start providing</Option>
+                    <Option value="-1">Never turn On</Option>
                     <Option value="0">0-seconds</Option>
                     <Option value="15">15-seconds</Option>
                     <Option value="30">30-seconds</Option>
@@ -71,7 +71,7 @@
                 <Label>Power off delay:</Label>
                 <List>
                     <Option value="Not configured">Use the settings on the PDU</Option>                    
-                    <Option value="-1">Never stop providing</Option>
+                    <Option value="-1">Never turn Off</Option>
                     <Option value="0">0-seconds</Option>
                     <Option value="15">15-seconds</Option>
                     <Option value="30">30-seconds</Option>

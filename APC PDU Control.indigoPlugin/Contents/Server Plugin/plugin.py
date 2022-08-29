@@ -84,9 +84,10 @@ class Plugin(indigo.PluginBase):
                                 shell=shell_value,
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, )
+                                stderr=subprocess.PIPE, 
+                                encoding="utf-8")
         stdout_value, stderr_value = proc.communicate()
-        return stdout_value, stderr_value
+        return stdout_value.strip(), stderr_value
 
     ########################################
     # Relay / Dimmer Action callback
@@ -436,10 +437,10 @@ class Plugin(indigo.PluginBase):
                                         "OnOffState": False},
                       'AllOffImmediately': {'theStateCode': " i 3", 
                                             "OnOffState": False},
-                      # 'RebootAllImmediately': {'theStateCode': " i 4", 
-                      #                          "OnOffState": True},
-                      # 'RebootAllSequence': {'theStateCode': " i 5", 
-                      #                       "OnOffState": True},
+                      'RebootAllImmediately': {'theStateCode': " i 4", 
+                                               "OnOffState": True},
+                      'RebootAllSequence': {'theStateCode': " i 5", 
+                                            "OnOffState": True},
                       'AllOffSequence': {'theStateCode': " i 7", 
                                          "OnOffState": False},
                      }
@@ -466,6 +467,7 @@ class Plugin(indigo.PluginBase):
                 self.debugLog("Failed to send to PDU")
                 self.debugLog(f"stderr value: {stderr_value}")
                 indigo.server.log(f'send "All" {state} failed', isError=True)
+                self.errorLog(f'"Error:" {stderr_value}')
 
             else:
 
@@ -475,31 +477,35 @@ class Plugin(indigo.PluginBase):
                         indigo.server.log('Turned "All" On immediately')
                         self.updateAll(community, ip_address, state, 'on')
 
-                    elif state == 'AllOnSequence':
-                        indigo.server.log('Turning "All" On in Sequence')                
-                        self.updateAll(community, ip_address, state, 'on')
-
                     elif state == 'AllOffImmediately':
                         indigo.server.log('Turning "All" Off immediately')
                         self.updateAll(community, ip_address, state, 'off')
+
+                    elif state == 'AllOnSequence':
+                        indigo.server.log('Turning "All" On after the '
+                                          '"Power On" Delay')
+                        self.updateAll(community, ip_address, state, 'on')
+                        self.errorLog('The outlet status may become out of '
+                                      'sync because of the delay')                        
+
+                    elif state == 'AllOffSequence':
+                        indigo.server.log('Turning "All" Off after the '
+                                          '"Power Off" Delay') 
+                        self.updateAll(community, ip_address, state, 'off')
+                        self.errorLog('The status of the outlets may become '
+                                      'out of sync because of delays involved')                        
+
+                    elif state == 'RebootAllSequence':
+                        indigo.server.log('Rebooting "All" in after the '
+                                          'configured delays')
+                        self.updateAll(community, ip_address, state, 'on')
+                        self.errorLog('The status of the outlets may become '
+                                      'out of sync because of delays involved')                        
 
                     elif state == 'RebootAllImmediately':
                         # need to test if off becomes on when rebooted
                         indigo.server.log('Rebooting "All" immediately')
                         self.updateAll(community, ip_address, state, 'on')
-
-                    elif state == 'AllOnSequence':
-                        indigo.server.log('Turning "All" On in Sequence')
-                        self.updateAll(community, ip_address, state, 'on')                        
-
-                    elif state == 'RebootAllSequence':
-                        indigo.server.log('Rebooting "All" in Sequence')
-                        # need to test if off becomes on when rebooted
-                        self.updateAll(community, ip_address, state, 'on')
-
-                    elif state == 'AllOffSequence':
-                        indigo.server.log('Turning "All" Off Sequence')
-                        self.updateAll(community, ip_address, state, 'off')
 
                     else:  # not sure you'd ever get here
                         indigo.server.log("Undefined state: {state}")
@@ -548,6 +554,18 @@ class Plugin(indigo.PluginBase):
                                               f'Off/On Delay of '
                                               f'{OutletPowerOffTime}/'
                                               f'{OutletPowerOnTime} seconds')
+
+    ########################################
+    # Menu callbacks defined in MenuItems.xml
+    ########################################
+    def toggleDebugging(self):
+        if self.debug:
+            self.logger.info("Turning off debug logging")
+            self.pluginPrefs["showDebugInfo"] = False
+        else:
+            self.logger.info("Turning on debug logging")
+            self.pluginPrefs["showDebugInfo"] = True
+        self.debug = not self.debug
 
     ########################################
     # Custom Plugin Action callbacks 

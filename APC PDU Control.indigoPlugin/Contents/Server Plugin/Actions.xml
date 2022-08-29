@@ -39,7 +39,7 @@
         <Name>Turn On All Outlets Immediately</Name>
         <CallbackMethod>TurnAllOnImmediately</CallbackMethod>
         <ConfigUI>
-            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.10.166">
                 <Label>IP Address:</Label>
             </Field>
             <Field id="community" type="textfield" defaultValue="private">
@@ -52,10 +52,10 @@
         </ConfigUI>
     </Action>
     <Action id="turnAllOnSequence">
-        <Name>Turn On All Outlets in Sequence</Name>
+        <Name>Turn ON All Outlets after the ‘Power On' Delay</Name>
         <CallbackMethod>TurnAllOnSequence</CallbackMethod>
         <ConfigUI>
-            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.10.166">
                 <Label>IP Address:</Label>
             </Field>
             <Field id="community" type="textfield" defaultValue="private">
@@ -90,7 +90,7 @@
         <Name>Reboot All Outlets Immediately</Name>
         <CallbackMethod>RebootAllImmediately</CallbackMethod>
         <ConfigUI>
-            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.10.166">
                 <Label>IP Address:</Label>
             </Field>
             <Field id="community" type="textfield" defaultValue="private">
@@ -103,10 +103,10 @@
         </ConfigUI>
     </Action>
     <Action id="rebootAllSequence">
-        <Name>Reboot All Outlets in Sequence</Name>
+        <Name>Reboot All Outlets using the configured delays</Name>        
         <CallbackMethod>RebootAllSequence</CallbackMethod>
                 <ConfigUI>
-            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.10.166">
                 <Label>IP Address:</Label>
             </Field>
             <Field id="community" type="textfield" defaultValue="private">
@@ -114,16 +114,16 @@
             </Field>
             <Field id="simpleSeparator5" type="separator"/>
             <Field id="autoLabel" type="label" >
-                <Label>Reboot in sequence, Turn OFF based on OutletPowerOffTime and Turn back ON based on MasterConfigReboot value</Label>
+                <Label>Reboot All outlets, wait each oulets OutletPowerOffTime to turn it off, then wait the OutletRebootDuration, finally wait the OutletPowerOnTime to turn each back on</Label>
             </Field>
         </ConfigUI>
     </Action>
 
     <Action id="turnAllOffSequence">
-        <Name>Turn All Outlets Off in Sequence</Name>
+        <Name>Turn OFF All Outlets after the ‘Power Off' Delay</Name>
         <CallbackMethod>TurnAllOffSequence</CallbackMethod>
         <ConfigUI>
-            <Field id="ipAddr" type="textfield" defaultValue="192.168.1.185">
+            <Field id="ipAddr" type="textfield" defaultValue="192.168.10.166">
                 <Label>IP Address:</Label>
             </Field>
             <Field id="community" type="textfield" defaultValue="private">
