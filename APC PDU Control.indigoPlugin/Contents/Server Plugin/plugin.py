@@ -258,7 +258,6 @@ class Plugin(indigo.PluginBase):
         outlet = dev.pluginProps["outlet"]
         pduIpAddr = dev.pluginProps["ipAddr"]
         community = dev.pluginProps["community"]
-        # UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
         PowerOnTime = dev.pluginProps["OutletPowerOnTime"]
         PowerOffTime = dev.pluginProps["OutletPowerOffTime"]
         RebootDuration = dev.pluginProps["OutletRebootDuration"]
@@ -499,17 +498,17 @@ class Plugin(indigo.PluginBase):
                         self.errorLog('The status of the outlets may become '
                                       'out of sync because of delays involved')                        
 
+                    elif state == 'RebootAllImmediately':
+                        # need to test if off becomes on when rebooted
+                        indigo.server.log('Rebooting "All" immediately')
+                        self.updateAll(community, ip_address, state, 'on')
+
                     elif state == 'RebootAllSequence':
                         indigo.server.log('Rebooting "All" in after the '
                                           'configured delays')
                         self.updateAll(community, ip_address, state, 'on')
                         self.errorLog('The status of the outlets may become '
                                       'out of sync because of delays involved')                        
-
-                    elif state == 'RebootAllImmediately':
-                        # need to test if off becomes on when rebooted
-                        indigo.server.log('Rebooting "All" immediately')
-                        self.updateAll(community, ip_address, state, 'on')
 
                     else:  # not sure you'd ever get here
                         indigo.server.log("Undefined state: {state}")
@@ -534,23 +533,29 @@ class Plugin(indigo.PluginBase):
                         OutletPowerOnTime = dev.states["OutletPowerOnTime"]
                         OutletPowerOffTime = dev.states["OutletPowerOffTime"]
 
-                        if state == "AllOnSequence":
+                        if (state == "AllOnImmediately"):
+                            dev.updateStateOnServer("onOffState", on_off)
+
+                        elif (state == "AllOffImmediately"):
+                            dev.updateStateOnServer("onOffState", on_off)
+
+                        elif state == "AllOnSequence":
                             dev.updateStateOnServer("onOffState", on_off)
                             indigo.server.log(f'Turning ON "{dev.name}" after '
                                               f'a {OutletPowerOnTime} second '
                                               'delay')
-
-                        elif (state == "RebootAllImmediately") and dev.onState:
-                            dev.updateStateOnServer("onOffState", on_off)
-                            indigo.server.log(f'Rebooting "{dev.name}", '
-                                              f'powering OFF now, power ON '
-                                              'after a "configured" delay')
 
                         elif state == "AllOffSequence":
                             dev.updateStateOnServer("onOffState", on_off)
                             indigo.server.log(f'Turning OFF "{dev.name}" after'
                                               f' a {OutletPowerOffTime} second'
                                               ' delay')
+
+                        elif (state == "RebootAllImmediately") and dev.onState:
+                            dev.updateStateOnServer("onOffState", on_off)
+                            indigo.server.log(f'Rebooting "{dev.name}", '
+                                              f'powering OFF now, power ON '
+                                              'after a "configured" delay')
 
                         elif (state == "RebootAllSequence") and dev.onState:
                             dev.updateStateOnServer("onOffState", on_off)
