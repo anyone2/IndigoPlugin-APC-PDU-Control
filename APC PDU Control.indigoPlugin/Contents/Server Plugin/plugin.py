@@ -133,6 +133,10 @@ class Plugin(indigo.PluginBase):
     ########################################
     def setPDUDelays(self, dev):
         self.debugLog("setPDUDelays called")
+
+        # get and update the 'Use Off As Reboot' selection True/False
+        UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
+        dev.updateStateOnServer("UseOffAsReboot", f"{UseOffAsReboot}")
         
         # get IP, community name & outlet from props
         outlet = dev.pluginProps["outlet"]
