@@ -10,6 +10,10 @@
 -->
 
 <Actions>
+    <Action id="confirmStatus">
+        <Name>Confirm Status All</Name>
+        <CallbackMethod>confirmStatusAll</CallbackMethod>
+    </Action>
     <Action id="OnImmediately" deviceFilter="self" uiPath="DeviceActions">
         <Name>Turn ON outlet immediately</Name>
         <CallbackMethod>outletOnImmediately</CallbackMethod>

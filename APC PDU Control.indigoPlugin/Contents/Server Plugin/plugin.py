@@ -576,6 +576,83 @@ class Plugin(indigo.PluginBase):
             self.pluginPrefs["showDebugInfo"] = True
         self.debug = not self.debug
 
+    ###########################################################
+    # Custom Plugin Action callbacks used by SNMP Trap Handler
+    ###########################################################
+    def confirmStatusAll(self, pluginAction):
+
+        # This function is meant to be executed as a Action Group,
+        # called from an external SNMP trap handler.
+
+        # It verifies that all outlet states in Indigo are correctly
+        # displayed an corrects them if not. Needed if states are change
+        # from PDU web portal directly.
+
+        ipList = []
+        the_devices = []
+
+        # make a list of all the APC PDU devices which are configured
+        for dev in indigo.devices.iter("com.anyone.apcpdu"):
+
+            if dev.configured:
+                the_id = dev.id
+                ip = dev.globalProps['com.anyone.apcpdu']['ipAddr']
+                outlet = dev.globalProps['com.anyone.apcpdu']['outlet']
+                community = dev.globalProps['com.anyone.apcpdu']['community']
+
+                # append to device list
+                the_devices.append([ip, the_id, outlet,
+                                    dev.onState, community])
+
+                # if ip & community combo are unique append to list
+                if [ip, community] not in ipList:
+                    ipList.append([ip, community])
+
+        # Just in case there is more than one PDU
+        # check all configured IP and community combinations
+        for the_ip, the_community in ipList:
+
+            # put together the snmpwalk command to determine device status
+            template = "snmpwalk -t 2 -m {0} -v 1 -c {1} {2} sPDUMasterState"
+            the_command = template.format(self.the_path, the_community, the_ip)
+
+            # Execute command and capture the output
+            stdout_value, stderr_value = self.shellCommand(the_command, True)
+
+            if not stderr_value:
+
+                # create a list of outlet On/Off states
+                outlet_list = stdout_value[43:-2].split()
+
+                # cycle thru configured devices
+                for device in the_devices:
+
+                    # extract device values
+                    ip, the_id, outlet, on_state, community = device
+
+                    # if device ip/community matches entry in ip/community list
+                    if (the_ip, the_community) == (ip, community):
+
+                        # if the device state is On in Indigo
+                        if on_state:
+                            # if device showed via snmpWalk as Off
+                            if outlet_list[int(outlet) - 1] == "Off":
+                                # Change the Indigo device state to Off
+                                target = indigo.devices[the_id]
+                                target.updateStateOnServer("onOffState", False)
+                                template = u'Device "%s" was turned off'
+                                indigo.server.log(template % target.name)
+
+                        else:  # the device state is Off in Indigo
+
+                            # if device showed via snmpWalk as On
+                            if outlet_list[int(outlet) - 1] == "On":
+                                # Change the Indigo device state to On
+                                target = indigo.devices[the_id]
+                                target.updateStateOnServer("onOffState", True)
+                                template = u'Device "%s" was turned on'
+                                indigo.server.log(template % target.name)
+
     ########################################
     # Custom Plugin Action callbacks 
     ########################################
