@@ -3,6 +3,7 @@
 ####################
 
 import os
+import shlex
 import indigo
 import socket
 import subprocess
@@ -78,16 +79,14 @@ class Plugin(indigo.PluginBase):
                                        "be a valid IP address")
                 return False, valuesDict, errorDict
 
-    ###################################################
-    def shellCommand(self, the_command, shell_value):
-        proc = subprocess.Popen(the_command,
-                                shell=shell_value,
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, 
-                                encoding="utf-8")
-        stdout_value, stderr_value = proc.communicate()
-        return stdout_value.strip(), stderr_value
+    ########################################
+    def call_program(self, the_cmd, capture):
+
+        cmd_as_list = shlex.split(the_cmd)
+        the_value = subprocess.run(cmd_as_list, 
+                                   capture_output=capture, 
+                                   encoding="utf-8") 
+        return the_value.stdout.strip(), the_value.stderr
 
     ########################################
     # Relay / Dimmer Action callback
@@ -173,7 +172,7 @@ class Plugin(indigo.PluginBase):
                 '''
                 
                 # Execute command and capture the output
-                stdout_value, stderr_value = self.shellCommand(the_command, True)
+                stdout_value, stderr_value = self.call_program(the_command, True)
 
                 self.debugLog(f"Sending to PDU: {the_command}")
                 self.debugLog(f"stdout value: {stdout_value}")
@@ -219,7 +218,7 @@ class Plugin(indigo.PluginBase):
                                           pduIpAddr, delay_name, outlet)
 
             # Execute command and capture the output
-            stdout_value, stderr_value = self.shellCommand(the_command, True)
+            stdout_value, stderr_value = self.call_program(the_command, True)
 
             if stderr_value:
 
@@ -298,7 +297,7 @@ class Plugin(indigo.PluginBase):
             '''
 
             # Execute command and capture the output
-            stdout_value, stderr_value = self.shellCommand(the_command, True)
+            stdout_value, stderr_value = self.call_program(the_command, True)
 
             self.debugLog(f"Sending to PDU: {the_command}")
             self.debugLog(f"stdout value: {stdout_value}")
@@ -364,7 +363,7 @@ class Plugin(indigo.PluginBase):
         the_command = snmpwalk.format(self.the_path, community, pduIpAddr)
 
         # Execute command and capture the output
-        stdout_value, stderr_value = self.shellCommand(the_command, True)
+        stdout_value, stderr_value = self.call_program(the_command, True)
 
         if stderr_value:
 
@@ -460,7 +459,7 @@ class Plugin(indigo.PluginBase):
             snmpset -t 2 -v 1 -c private -v 1 192.168.0.232 1.3.6.1.4.1.318.1.1.4.2.1.0 i 1
             '''
             # Execute command and capture the output
-            stdout_value, stderr_value = self.shellCommand(snmpset, True)
+            stdout_value, stderr_value = self.call_program(snmpset, True)
 
             self.debugLog(f"Sending to PDU: {snmpset}")
             self.debugLog(f"stdout value: {stdout_value}")
@@ -617,7 +616,7 @@ class Plugin(indigo.PluginBase):
             the_command = template.format(self.the_path, the_community, the_ip)
 
             # Execute command and capture the output
-            stdout_value, stderr_value = self.shellCommand(the_command, True)
+            stdout_value, stderr_value = self.call_program(the_command, True)
 
             if not stderr_value:
 
