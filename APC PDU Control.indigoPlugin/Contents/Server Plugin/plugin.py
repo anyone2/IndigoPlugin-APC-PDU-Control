@@ -133,14 +133,23 @@ class Plugin(indigo.PluginBase):
     def setPDUDelays(self, dev):
         self.debugLog("setPDUDelays called")
 
-        # get and update the 'Use Off As Reboot' selection True/False
-        UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
-        dev.updateStateOnServer("UseOffAsReboot", f"{UseOffAsReboot}")
-        
         # get IP, community name & outlet from props
         outlet = dev.pluginProps["outlet"]
         pduIpAddr = dev.pluginProps["ipAddr"]
         community = dev.pluginProps["community"]
+        UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
+
+        # get and update the 'Use Off As Reboot' selection True/False
+        dev.updateStateOnServer("UseOffAsReboot", f"{UseOffAsReboot}")
+
+        # get and update the 'ipAddr' in custom states
+        dev.updateStateOnServer("ipAddr", f"{pduIpAddr}")
+
+        # get and update the 'outlet' in custom states
+        dev.updateStateOnServer("outlet", f"{outlet}")
+
+        # get and update the 'outlet' in custom states
+        dev.updateStateOnServer("community", f"{community}")
 
         # cycle thru delays settings
         for delay_name in ["OutletPowerOnTime", 
@@ -188,7 +197,6 @@ class Plugin(indigo.PluginBase):
                     
                     if stdout_value:
                         # everything work
-                        dev.updateStateOnServer(f"{delay_name}", delay_name)
                         self.debugLog(f'send successful for "{dev.name} '
                                       f'and delay "{delay_name}"')
                     
@@ -236,7 +244,11 @@ class Plugin(indigo.PluginBase):
                     the_delay = int(stdout_value.split()[-1])
 
                     # update delay on server
-                    dev.updateStateOnServer(delay_name, the_delay)
+                    if the_delay == -1:
+                        dev.updateStateOnServer(delay_name, 'Never')
+
+                    else:
+                        dev.updateStateOnServer(delay_name, the_delay)
 
                     self.debugLog(f'{outlet}-{dev.name} is configured '
                                   f'with a "{delay_name}" delay of '
