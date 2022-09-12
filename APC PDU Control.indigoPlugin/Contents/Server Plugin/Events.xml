@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<Events>
+    <Event id="snmpTrap">
+        <Name>SNMP Trap Received</Name>
+    </Event>
+</Events>

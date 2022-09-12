@@ -6,6 +6,7 @@ import os
 import shlex
 import indigo
 import socket
+import logging
 import subprocess
 
 
@@ -196,6 +197,16 @@ class Plugin(indigo.PluginBase):
                 else:   # no errors
                     
                     if stdout_value:
+                        # get the last time which is the configured delay 
+                        the_delay = int(dev.pluginProps[delay_name])
+
+                        # update delay on server
+                        if the_delay == -1:
+                            dev.updateStateOnServer(delay_name, 'Never')
+
+                        else:
+                            dev.updateStateOnServer(delay_name, the_delay)                    
+
                         # everything work
                         self.debugLog(f'send successful for "{dev.name} '
                                       f'and delay "{delay_name}"')
@@ -265,6 +276,10 @@ class Plugin(indigo.PluginBase):
     def setPDUState(self, dev, state):
         self.debugLog("setPDUState called")
 
+        if dev is None:
+            self.errorLog("Error: An outlet was not selected")
+            return
+
         # get IP, community name & outlet from props
         outlet = dev.pluginProps["outlet"]
         pduIpAddr = dev.pluginProps["ipAddr"]
@@ -296,66 +311,84 @@ class Plugin(indigo.PluginBase):
         # if known state
         if pdu_action.get(state):
 
-            # put together the snmpset command to set device parameters
-            snmpset = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDUOutletCtl.{3}{4}"
-            the_command = snmpset.format(self.the_path, community,
-                                         pduIpAddr, outlet, 
-                                         pdu_action[state]['theStateCode'])
+            if (state == 'outletRebootWithDelay') and int(PowerOffTime) == -1:
+                indigo.server.log(f'Rebooting "{dev.name}" after a delay '
+                                  'will have no effect, the Power Off Time '
+                                  'is set to Never', level=logging.WARNING)
+            elif (state == 'outletOnWithDelay') and int(PowerOnTime) == -1:
+                indigo.server.log(f'Turning "{dev.name}" On after a delay '
+                                  'will have no effect, the Power On Time '
+                                  'is set to Never', level=logging.WARNING)
 
-            ''' # noqa
-            snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletCtl.5 i 1
-
-            The full path to the MIB file is required            
-            '''
-
-            # Execute command and capture the output
-            stdout_value, stderr_value = self.call_program(the_command)
-
-            self.debugLog(f"Sending to PDU: {the_command}")
-            self.debugLog(f"stdout value: {stdout_value}")
-
-            if stderr_value:
-                # some type of error
-                self.debugLog("Failed to send to PDU")
-                self.debugLog(f"stderr value: {stderr_value}")
-                indigo.server.log(f'send "{dev.name}" {state} failed', 
-                                  isError=True)
-
+            elif (state == 'outletOffWithDelay') and int(PowerOffTime) == -1:
+                indigo.server.log(f'Turning "{dev.name}" Off after a delay '
+                                  'will have no effect, the Power On Time '
+                                  'is set to Never', level=logging.WARNING)
             else:
 
-                if stdout_value:
-                    
-                    if state in ['on', 'off']:
-                        indigo.server.log(f'Turned "{dev.name}" {state}')
-                        dev.updateStateOnServer("onOffState", 
-                                                pdu_action[state]
-                                                ['OnOffState'])
+                # put together the snmpset command to set device parameters
+                snmpset = "snmpset -t 2 -m {0} -v 1 -c {1} {2} sPDUOutletCtl.{3}{4}"
+                the_command = snmpset.format(self.the_path, community,
+                                             pduIpAddr, outlet, 
+                                             pdu_action[state]['theStateCode'])
 
-                    elif state == 'outletOffImmediately':
-                        indigo.server.log(f'Turned "{dev.name}" off')
-                        dev.updateStateOnServer("onOffState", 'off')
-                    elif state == 'outletReboot':
-                        indigo.server.log(f'Rebooted "{dev.name}"')                
-                        dev.updateStateOnServer("onOffState", 'on')
-                    elif state == 'outletOffWithDelay':
-                        indigo.server.log(f'Turning off "{dev.name}" after'
-                                          f'a {PowerOffTime} second delay')
-                        dev.updateStateOnServer("onOffState", 'off')
-                    elif state == 'outletOnWithDelay':
-                        indigo.server.log(f'Turning on "{dev.name}" after '
-                                          f'a {PowerOnTime} second  delay')
-                        dev.updateStateOnServer("onOffState", 'on')
-                    elif state == 'outletRebootWithDelay':
-                        indigo.server.log(f'Rebooting "{dev.name}" after '
-                                          f'a {RebootDuration} second delay')
-                        dev.updateStateOnServer("onOffState", 'on')
+                ''' # noqa
+                snmpset -t 2 s-m PowerNet-MIB -v 1 -c private -v 1 192.168.0.232 sPDUOutletCtl.5 i 1
 
-                    else:  # not sure you'd ever get here
-                        indigo.server.log(f"Unknown state: {state}")
+                The full path to the MIB file is required            
+                '''
 
-                else:  # stdout_value was blank
+                # Execute command and capture the output
+                stdout_value, stderr_value = self.call_program(the_command)
 
-                    self.errorLog("Error: some unknown error occurred")
+                self.debugLog(f"Sending to PDU: {the_command}")
+                self.debugLog(f"stdout value: {stdout_value}")
+
+                if stderr_value:
+                    # some type of error
+                    self.debugLog("Failed to send to PDU")
+                    self.debugLog(f"stderr value: {stderr_value}")
+                    indigo.server.log(f'send "{dev.name}" {state} failed', 
+                                      isError=True)
+
+                else:
+
+                    if stdout_value:
+                        
+                        if state in ['on', 'off']:
+                            indigo.server.log(f'Turned "{dev.name}" {state}')
+                            dev.updateStateOnServer("onOffState", 
+                                                    pdu_action[state]
+                                                    ['OnOffState'])
+
+                        elif state == 'outletOffImmediately':
+                            indigo.server.log(f'Turned "{dev.name}" off')
+                            dev.updateStateOnServer("onOffState", 'off')
+                        elif state == 'outletReboot':
+                            indigo.server.log(f'Rebooted "{dev.name}"')                
+                            dev.updateStateOnServer("onOffState", 'on')
+                        elif state == 'outletOffWithDelay':
+                            indigo.server.log(f'Turning off "{dev.name}" after'
+                                              f'a {PowerOffTime} second delay')
+                            dev.updateStateOnServer("onOffState", 'off')
+                        elif state == 'outletOnWithDelay':
+                            indigo.server.log(f'Turning on "{dev.name}" after '
+                                              f'a {PowerOnTime} second  delay')
+                            dev.updateStateOnServer("onOffState", 'on')
+                        elif state == 'outletRebootWithDelay':
+                            indigo.server.log(f'Rebooting "{dev.name}" after a'
+                                              f'{PowerOffTime} second Power Off '
+                                              f'Delay and a {RebootDuration} '
+                                              f'second Reboot Off/On Delay')
+
+                            # dev.updateStateOnServer("onOffState", 'on')
+
+                        else:  # not sure you'd ever get here
+                            indigo.server.log(f"Unknown state: {state}")
+
+                    else:  # stdout_value was blank
+
+                        self.errorLog("Error: some unknown error occurred")
 
         else:  # unknown state
 
@@ -702,3 +735,47 @@ class Plugin(indigo.PluginBase):
 
     def TurnAllOffSequence(self, plugin_action, dev):
         self.setAllState(plugin_action, "AllOffSequence")
+
+    ########################################
+    # Custom dynamic lists 
+    ########################################
+    def configuredIPs(self, filter="", valuesDict=None, typeId="", targetId=0):
+
+        ipList = []
+        # make a list of all the APC PDU devices which are configured
+        for dev in indigo.devices.iter("com.anyone.apcpdu"):
+
+            if dev.configured:
+                ip = dev.globalProps['com.anyone.apcpdu']['ipAddr']
+                # if ip is unique append to list
+                if (ip, ip) not in ipList:
+                    ipList.append((ip, ip))
+                    
+        # From the example above, filter = "stuff"
+        # You can pass anything you want in the filter for any purpose
+        # Create a list where each entry is a list - the first item is
+        # the value attribute and last is the display string that will 
+        # show up in the control. All parameters are read-only.
+        # leaving this comment because there is likely another way to do this
+        return ipList
+
+    def configuredCommunities(self, filter="", valuesDict=None, typeId="", targetId=0):
+
+        communityList = []
+        # make a list of all the APC PDU devices which are configured
+        for dev in indigo.devices.iter("com.anyone.apcpdu"):
+
+            if dev.configured:
+                community = dev.globalProps['com.anyone.apcpdu']['community']
+
+                # if community is unique append to list
+                if (community, community) not in communityList:
+                    communityList.append((community, community))
+                    
+        # From the example above, filter = "stuff"
+        # You can pass anything you want in the filter for any purpose
+        # Create a list where each entry is a list - the first item is
+        # the value attribute and last is the display string that will 
+        # show up in the control. All parameters are read-only.
+        # leaving this comment because there is likely another way to do this
+        return communityList
