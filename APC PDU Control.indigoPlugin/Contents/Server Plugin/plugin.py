@@ -37,6 +37,19 @@ class Plugin(indigo.PluginBase):
         community = dev.pluginProps["community"]
         pduIpAddr = dev.pluginProps["ipAddr"]
         outlet = dev.pluginProps["outlet"]
+        UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
+
+        # get and update the 'Use Off As Reboot' selection True/False
+        dev.updateStateOnServer("UseOffAsReboot", f"{UseOffAsReboot}")
+
+        # get and update the 'ipAddr' in custom states
+        dev.updateStateOnServer("ipAddr", f"{pduIpAddr}")
+
+        # get and update the 'outlet' in custom states
+        dev.updateStateOnServer("outlet", f"{outlet}")
+
+        # get and update the 'outlet' in custom states
+        dev.updateStateOnServer("community", f"{community}")
 
         self.debugLog(f"Device: {dev.name}")
         self.debugLog(f"Community Name: {community}")
@@ -46,11 +59,11 @@ class Plugin(indigo.PluginBase):
         # get the state of the outlets
         self.getPDUState(dev)
 
-        # set the PDU delays configured in the Plugin
-        self.setPDUDelays(dev)
-
         # get the delays configured on each outlet on the PDU
         self.getPDUDelays(dev)
+
+        # set the PDU delays configured in the Plugin
+        self.setPDUDelays(dev)
 
     ########################################
     def validateDeviceConfigUi(self, valuesDict, typeId, devId):
@@ -138,19 +151,6 @@ class Plugin(indigo.PluginBase):
         outlet = dev.pluginProps["outlet"]
         pduIpAddr = dev.pluginProps["ipAddr"]
         community = dev.pluginProps["community"]
-        UseOffAsReboot = dev.pluginProps["UseOffAsReboot"]
-
-        # get and update the 'Use Off As Reboot' selection True/False
-        dev.updateStateOnServer("UseOffAsReboot", f"{UseOffAsReboot}")
-
-        # get and update the 'ipAddr' in custom states
-        dev.updateStateOnServer("ipAddr", f"{pduIpAddr}")
-
-        # get and update the 'outlet' in custom states
-        dev.updateStateOnServer("outlet", f"{outlet}")
-
-        # get and update the 'outlet' in custom states
-        dev.updateStateOnServer("community", f"{community}")
 
         # cycle thru delays settings
         for delay_name in ["OutletPowerOnTime", 
