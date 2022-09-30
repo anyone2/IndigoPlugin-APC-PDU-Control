@@ -6,6 +6,10 @@
 -->
 
 <Actions>
+    <Action id="outletChange" deviceFilter="self" uiPath="DeviceActions">
+        <Name>Process Outlet Change</Name>
+        <CallbackMethod>outletChange</CallbackMethod>
+    </Action>
     <Action id="confirmStatus">
         <Name>Confirm Status All</Name>
         <CallbackMethod>confirmStatusAll</CallbackMethod>
