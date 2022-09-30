@@ -700,6 +700,10 @@ class Plugin(indigo.PluginBase):
     ########################################
     # Custom Plugin Action callbacks 
     ########################################
+    def outletChange(self, plugin_action, dev):
+        # self.setPDUState(dev, "outletReboot")
+        self.getPDUDelays(dev)
+
     def outletOnImmediately(self, plugin_action, dev):
         self.setPDUState(dev, "on")
 
